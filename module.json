@@ -19,7 +19,7 @@
     "requires": []
   },
   "esmodules": [
-    "scripts/module.js"
+    "scripts/afk-tavern.js"
   ],
   "styles": [
     "styles/general-styles.css",
