@@ -2,8 +2,8 @@
 [![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/cw/ReAcTiOnN)
 
 # AFK Tavern
-A **system-agnostic Foundry VTT module** that turns mid-session breaks into a shared experience. GMs run a break timer; players track who's away, who's back, and pass the time with a stack of built-in tavern minigames — solo, multiplayer, and spectatable.
-All features are fully toggleable through world settings so tables can keep things as light or as featureful as they like.
+A **system-agnostic Foundry VTT module** that makes keeping track of users that are back easy. GMs run a break timer; players track who's away, who's back, and pass the time with a stack of built-in tavern minigames - solo, multiplayer, and spectatable.
+All features are fully toggleable through world settings so tables can keep things as light you like.
 
 ---
 
