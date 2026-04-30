@@ -7,6 +7,8 @@ All features are fully toggleable through world settings so tables can keep thin
 
 ---
 
+<img width="975" height="551" alt="afk-tavern" src="https://github.com/user-attachments/assets/d2969f47-a1fc-41e7-bb67-15c0b7b85d8f" />
+
 ## Features
 
 ### **Break Room**
