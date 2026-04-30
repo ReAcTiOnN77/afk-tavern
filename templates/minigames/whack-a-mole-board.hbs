@@ -1,0 +1,55 @@
+<div class="minigame-board-part">
+<div class="wam-combo-bar {{#unless combo}}wam-combo-hidden{{/unless}}">
+  <span class="wam-combo-fire">🔥</span>
+  <span class="wam-combo-text">{{comboText}}</span>
+</div>
+<div class="wam-legend">
+  <div class="wam-legend-item">
+    <div class="wam-creature wam-creature-mimic"><i class="fa-solid fa-ghost"></i></div>
+    <span class="wam-legend-pts wam-pts-good">+1</span>
+  </div>
+  <div class="wam-legend-item">
+    <div class="wam-creature wam-creature-chest"><i class="fa-solid fa-coins"></i></div>
+    <span class="wam-legend-pts wam-pts-best">+3</span>
+  </div>
+  <div class="wam-legend-item">
+    <div class="wam-creature wam-creature-cat"><i class="fa-solid fa-cat"></i></div>
+    <span class="wam-legend-pts wam-pts-bad">-2</span>
+  </div>
+</div>
+{{#if gameOver}}
+  <div class="solo-results-overlay">
+    <div class="solo-results-card">
+      <span class="solo-results-title">{{loc.gameOver}}</span>
+      <span class="solo-results-score">{{score}}</span>
+      <span class="solo-results-label">{{loc.score}}</span>
+      <button type="button" data-action="newGame" class="tavern-btn btn-start">
+        <i class="fa-solid fa-rotate"></i> {{loc.tryAgain}}
+      </button>
+    </div>
+  </div>
+{{/if}}
+
+<div class="game-board-frame wam-board-frame">
+  <div class="wam-grid">
+    {{#each barrels}}
+      <div class="wam-hole {{#if hasMole}}wam-occupied{{/if}} {{#if isHit}}wam-smashed{{/if}}" data-action="whack" data-index="{{index}}">
+        <div class="wam-hole-inner">
+          {{#if hasMole}}
+            <div class="wam-creature wam-creature-{{type}}">
+              {{#if isMimic}}<i class="fa-solid fa-ghost"></i>{{/if}}
+              {{#if isChest}}<i class="fa-solid fa-coins"></i>{{/if}}
+              {{#if isCat}}<i class="fa-solid fa-cat"></i>{{/if}}
+            </div>
+          {{/if}}
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>
+{{#if notStarted}}
+  <button type="button" data-action="startGame" class="tavern-btn btn-start">
+    <i class="fa-solid fa-hammer"></i> {{loc.start}}
+  </button>
+{{/if}}
+</div>

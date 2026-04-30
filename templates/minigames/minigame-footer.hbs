@@ -1,0 +1,29 @@
+<div class="minigame-footer-part">
+{{#if isMultiplayer}}
+  {{#if isGameOver}}
+    {{#if isWin}}
+      <div class="mp-confetti-container">
+        <div class="mp-confetti mp-confetti-1"></div>
+        <div class="mp-confetti mp-confetti-2"></div>
+        <div class="mp-confetti mp-confetti-3"></div>
+        <div class="mp-confetti mp-confetti-4"></div>
+        <div class="mp-confetti mp-confetti-5"></div>
+        <div class="mp-confetti mp-confetti-6"></div>
+        <div class="mp-confetti mp-confetti-7"></div>
+        <div class="mp-confetti mp-confetti-8"></div>
+      </div>
+    {{/if}}
+    <div class="mp-footer">
+      <button type="button" data-action="rematch" class="tavern-btn btn-start">
+        <i class="fa-solid fa-rotate"></i> {{footerLabel}}
+      </button>
+    </div>
+  {{/if}}
+{{else if showFooter}}
+  <div class="mm-footer">
+    <button type="button" data-action="newGame" class="tavern-btn btn-subtle">
+      <i class="fa-solid fa-rotate"></i> {{footerLabel}}
+    </button>
+  </div>
+{{/if}}
+</div>

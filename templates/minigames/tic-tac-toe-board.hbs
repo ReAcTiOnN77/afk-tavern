@@ -1,0 +1,24 @@
+<div class="ttt-wrapper {{#if isGameOver}}game-ended{{/if}} {{#if isWin}}game-won{{/if}} {{#if isLoss}}game-lost{{/if}}">
+  <div class="ttt-board-frame">
+    <div class="ttt-grid">
+      {{#each cells}}
+        <div class="ttt-cell {{#if isEmpty}}ttt-cell-empty{{/if}} {{#if isWinCell}}ttt-cell-win{{/if}} {{#if raw}}ttt-has-piece{{/if}}"
+             data-action="playCell" data-index="{{index}}">
+          {{#if raw}}
+            <div class="ttt-piece ttt-piece-{{raw}}">
+              {{#if isX}}
+                <div class="ttt-x-mark">
+                  <div class="ttt-x-line ttt-x-line-1"></div>
+                  <div class="ttt-x-line ttt-x-line-2"></div>
+                </div>
+              {{/if}}
+              {{#if isO}}
+                <div class="ttt-o-mark"></div>
+              {{/if}}
+            </div>
+          {{/if}}
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</div>

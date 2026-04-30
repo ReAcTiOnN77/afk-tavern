@@ -1,0 +1,41 @@
+<section class="afk-settings-page">
+
+{{#if description}}
+  <p class="hint" style="margin-bottom: 0.5rem;">{{{description}}}</p>
+{{/if}}
+
+{{#each settings}}
+<div class="form-group">
+  <label>{{this.name}}</label>
+  <div class="form-fields">
+
+    {{#if this.isCheckbox}}
+      <input type="checkbox" name="{{this.key}}" {{checked this.value}}>
+    {{else if this.isFile}}
+      <div class="afk-settings-file-row">
+        <input type="text" name="{{this.key}}" value="{{this.value}}" placeholder="{{this.placeholder}}">
+        <button type="button" class="afk-settings-icon-btn" data-action="browseFile" data-key="{{this.key}}" data-tooltip="{{localize "AFK_TAVERN.settingsApp.browse"}}">
+          <i class="fa-solid fa-folder-open"></i>
+        </button>
+        {{#if this.previewable}}
+          <button type="button" class="afk-settings-icon-btn" data-action="previewSound" data-key="{{this.key}}" data-tooltip="{{localize "AFK_TAVERN.settingsApp.preview"}}">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+        {{/if}}
+      </div>
+    {{else if this.isSelect}}
+      <select name="{{this.key}}">
+        {{selectOptions this.choices selected=this.value localize=true}}
+      </select>
+    {{else if this.isNumber}}
+      {{numberInput this.value name=this.key min=this.min max=this.max step=this.step}}
+    {{else}}
+      <input type="text" name="{{this.key}}" value="{{this.value}}">
+    {{/if}}
+
+  </div>
+  {{#if this.hint}}<p class="hint">{{{this.hint}}}</p>{{/if}}
+</div>
+{{/each}}
+
+</section>

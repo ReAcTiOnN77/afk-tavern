@@ -1,0 +1,31 @@
+{
+  "_comment": "Word lists for the Word Scramble minigame. Generic D&D-themed by default. Replace or extend any list freely. easy = 2-3 letters, medium = 4-7 letters, hard = 7+ letters.",
+  "easy": [
+    "ORC", "ELF", "BAT", "RAT", "OWL", "IMP", "APE", "BOG", "FOG", "AXE",
+    "BOW", "GEM", "ORB", "PIT", "DEN", "HEX", "RUN", "WAR", "FLY", "ICE",
+    "ARC", "ARM", "ASH", "CUP", "CUT", "DAM", "DIG", "DIM", "DIP", "DRY",
+    "DUG", "EGG", "EYE", "FAN", "FAR", "FIN", "FIT", "FUR", "GAP", "GOD",
+    "GUT", "HAM", "HIT", "HOG", "HOP", "HUT", "INK", "INN", "JAB", "JAM",
+    "JAW", "JOG", "KEY", "KIN", "LAP", "LOG", "MAP", "MIX", "MOB", "NET"
+  ],
+  "medium": [
+    "DRAGON", "GOBLIN", "WIZARD", "POTION", "SHIELD", "DAGGER", "SCROLL", "UNDEAD", "LICH", "GHOUL",
+    "MIMIC", "GOLEM", "ROGUE", "CLERIC", "DRUID", "KOBOLD", "WYVERN", "TROLL", "GNOME", "WRAITH",
+    "SPIDER", "VAMPIRE", "ZOMBIE", "RANGER", "PALADIN", "KNIGHT", "ARMOR", "BLADE", "CHAIN", "CHEST",
+    "CRYPT", "DUNGEON", "ELDER", "FAIRY", "FLAME", "FORGE", "FROST", "GIANT", "GUILD", "HASTE",
+    "HYDRA", "IVORY", "JEWEL", "LANCE", "MAGIC", "MANOR", "MARSH", "NOBLE", "OCEAN", "PIXIE",
+    "QUEST", "REALM", "SCALE", "SHADE", "SKULL", "SPEAR", "SPELL", "STAFF", "STONE", "SWAMP",
+    "SWORD", "THIEF", "TITAN", "TOKEN", "TOWER", "TRAPS", "VAULT", "VIGOR", "CHARM", "CURSE",
+    "DEMON", "DEVIL", "DWARF", "FIEND", "FLAIL", "GRAVE", "GROVE", "HAUNT", "LEECH", "MIRTH",
+    "MOAT", "OGRE", "PIKE", "RELIC", "RUNE", "SAGE", "SIEGE", "SMITE", "STEED", "TALON",
+    "VENOM", "VIPER", "WATCH", "WITCH", "ALTAR"
+  ],
+  "hard": [
+    "BEHOLDER", "TARRASQUE", "DISPLACER", "OWLBEAR", "MINDFLAYER", "GELATINOUS", "MANTICORE", "BULETTE", "BASILISK", "NECROMANCER",
+    "BARBARIAN", "BERSERKER", "HOBGOBLIN", "MINOTAUR", "GRIFFON", "CHIMERA", "WARHAMMER", "LONGSWORD", "BATTLEAXE", "ALCHEMIST",
+    "ABOLETH", "BARRACKS", "CATAPULT", "CENTAUR", "CHAMPION", "COLOSSUS", "CONJURER", "CROSSBOW", "DARKWOOD", "DOPPELGANGER",
+    "DRAGONBORN", "DUNGEONER", "ELEMENTAL", "ENCHANTER", "FIREBALL", "GARGOYLE", "GUARDIAN", "HALFLING", "ICEBOUND", "ILLUSION",
+    "INVOCATION", "IRONCLAD", "LABYRINTH", "LEYLINE", "MOONSTONE", "NIGHTMARE", "OATHBOUND", "OBSIDIAN", "OVERLORD", "PARCHMENT",
+    "PORTCULLIS", "PROPHECY", "REVENANT", "SANCTUM", "SENTINEL", "SHAPESHIFTER", "SKELETON", "SPELLBOOK", "SWORDSMAN", "SORCERER"
+  ]
+}

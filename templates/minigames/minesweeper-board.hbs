@@ -1,0 +1,34 @@
+<div class="minigame-board-part">
+{{#if gameOver}}
+  <div class="solo-results-overlay solo-results-loss">
+    <div class="solo-results-card">
+      <span class="solo-results-title">💣 {{loc.defeat}}</span>
+      <button type="button" data-action="newGame" class="tavern-btn btn-start">
+        <i class="fa-solid fa-rotate"></i> {{loc.newGame}}
+      </button>
+    </div>
+  </div>
+{{/if}}
+{{#if gameWon}}
+  <div class="solo-results-overlay">
+    <div class="solo-results-card">
+      <span class="solo-results-title">🎉 {{loc.victory}} 🎉</span>
+      <span class="solo-results-score">{{elapsed}}</span>
+      <span class="solo-results-label">{{loc.time}}</span>
+      <button type="button" data-action="newGame" class="tavern-btn btn-start">
+        <i class="fa-solid fa-rotate"></i> {{loc.newGame}}
+      </button>
+    </div>
+  </div>
+{{/if}}
+
+<div class="game-board-frame">
+  <div class="ms-grid">
+    {{#each cells}}
+      <div class="{{cellClass}}" data-action="revealCell" data-r="{{r}}" data-c="{{c}}">
+        <span>{{display}}</span>
+      </div>
+    {{/each}}
+  </div>
+</div>
+</div>

@@ -1,0 +1,188 @@
+<div class="break-room-wrapper">
+
+  {{!-- Header Banner --}}
+  <div class="tavern-banner theme-fireplace">
+    <div class="fire-glow"></div>
+    <div class="ember ember-1"></div>
+    <div class="ember ember-2"></div>
+    <div class="ember ember-3"></div>
+    <div class="ember ember-4"></div>
+    <div class="ember ember-5"></div>
+    <div class="tavern-sign">
+      <span class="sign-text">{{loc.bannerTitle}}</span>
+      <span class="sign-sub">{{loc.bannerSub}}</span>
+    </div>
+  </div>
+
+  {{!-- Timer Section --}}
+  <div class="break-timer-section">
+    {{#if breakActive}}
+      <span class="timer-label">{{timerLabel}}</span>
+      <div class="timer-display-wrapper">
+        <div class="timer-display {{#if timerUrgent}}timer-urgent{{else if timerWarning}}timer-warning{{/if}}">
+          <div class="timer-inner">
+            <div class="timer-left"><i class="fa-solid fa-hourglass-half timer-icon"></i><span class="timer-mm">{{timerMM}}</span></div>
+            <span class="timer-colon">:</span>
+            <div class="timer-right"><span class="timer-ss">{{timerSS}}</span></div>
+          </div>
+        </div>
+        {{#if isGM}}
+          <button type="button" class="btn-notify-bell" data-action="notifyPlayers" data-tooltip="{{loc.notifyPlayers}}">
+            <i class="fa-solid fa-bell"></i>
+          </button>
+        {{/if}}
+      </div>
+      <div class="timer-progress-bar">
+        <div class="timer-progress-fill" style="width: {{progressPercent}}%"></div>
+      </div>
+    {{else}}
+      {{#if isGM}}
+        <div class="break-setup">
+          <label class="duration-label">{{loc.durationLabel}}</label>
+          <div class="duration-controls">
+            <button type="button" data-action="setDuration" data-minutes="5" class="duration-preset {{#if preset5Active}}active{{/if}}">5m</button>
+            <button type="button" data-action="setDuration" data-minutes="10" class="duration-preset {{#if preset10Active}}active{{/if}}">10m</button>
+            <button type="button" data-action="setDuration" data-minutes="15" class="duration-preset {{#if preset15Active}}active{{/if}}">15m</button>
+            <button type="button" data-action="setDuration" data-minutes="20" class="duration-preset {{#if preset20Active}}active{{/if}}">20m</button>
+            <button type="button" data-action="setDuration" data-minutes="25" class="duration-preset {{#if preset25Active}}active{{/if}}">25m</button>
+            <button type="button" data-action="setDuration" data-minutes="30" class="duration-preset {{#if preset30Active}}active{{/if}}">30m</button>
+            <input type="number" class="break-duration-input" value="{{selectedDurationMinutes}}" min="1" max="180" step="1">
+          </div>
+          <label class="duration-label">{{loc.endTimeLabel}}</label>
+          <div class="end-time-controls">
+            <input type="time" class="break-end-time-input" value="{{endTimeValue}}">
+            <span class="end-time-gmt">{{gmtLabel}}</span>
+          </div>
+          <div class="break-setup-divider"></div>
+          <label class="lobby-mode-label" data-action="toggleLobby" data-tooltip="{{loc.lobbyHint}}">
+            <i class="fa-solid {{#if lobbyMode}}fa-square-check{{else}}fa-square{{/if}}"></i>
+            <span>{{loc.lobbyLabel}}</span>
+          </label>
+        </div>
+      {{else}}
+        <div class="waiting-message">
+          <i class="fa-solid fa-beer-mug-empty"></i>
+          <span>{{loc.waiting}}</span>
+        </div>
+      {{/if}}
+    {{/if}}
+  </div>
+
+  {{!-- GM Controls --}}
+  {{#if isGM}}
+    <div class="gm-controls">
+      {{#if breakActive}}
+        <button type="button" data-action="endBreak" class="{{gmBtnCls}}">
+          <span class="btn-inner"><i class="fa-solid fa-play"></i> {{gmBtnLabel}}</span>
+        </button>
+      {{else}}
+        <button type="button" data-action="startBreak" class="tavern-btn btn-start">
+          <span class="btn-inner"><i class="fa-solid fa-beer-mug-empty"></i> {{loc.startBreak}}</span>
+        </button>
+      {{/if}}
+    </div>
+  {{/if}}
+
+  {{!-- Player Status --}}
+  {{#if breakActive}}
+    <div class="player-status-section">
+      <h3 class="section-heading">
+        <i class="fa-solid fa-users"></i> {{loc.patronsHeading}}
+        {{#if badgeText}}<span class="all-back-badge">{{badgeText}}</span>{{/if}}
+      </h3>
+      <div class="player-grid">
+        {{#each players}}
+          <div class="player-card {{#if isOffline}}player-offline{{else if isBack}}player-back{{else}}player-away{{/if}} {{#if isGM}}player-gm{{/if}} {{#if isSelf}}player-self{{/if}}" data-user-id="{{userId}}">
+            <img class="player-avatar" src="{{avatar}}" alt="{{name}}">
+            <div class="player-info">
+              <span class="player-name" style="color: {{color}}">
+                {{name}}
+                {{#if isGM}}<span class="gm-badge">{{../loc.gmBadge}}</span>{{/if}}
+                {{#if characterName}}<span class="character-name">[{{characterName}}]</span>{{/if}}
+              </span>
+              <span class="player-status-badge">
+                <i class="{{statusIcon}}"></i> {{statusText}}
+              </span>
+            </div>
+            {{#unless isOffline}}
+              {{#if isSelf}}
+                <button type="button" data-action="{{btnAction}}" class="{{btnCls}}">
+                  <i class="{{btnIcon}}"></i> {{btnLabel}}
+                </button>
+              {{else}}
+                {{#if canSpectate}}
+                  <button type="button" data-action="spectatePlayer" data-user-id="{{userId}}" class="tavern-btn btn-spectate">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                {{/if}}
+              {{/if}}
+            {{/unless}}
+          </div>
+        {{/each}}
+      </div>
+    </div>
+  {{/if}}
+
+  {{!-- Games Drawer Tab --}}
+  <div class="drawer-tab" title="{{loc.gamesHeading}}">
+    <i class="fa-solid fa-dice"></i>
+  </div>
+
+  {{!-- Games Drawer --}}
+  <div class="games-drawer">
+    <h3 class="section-heading">
+      <i class="fa-solid fa-dice"></i> {{loc.gamesHeading}}
+      <button type="button" class="tavern-btn btn-highscores" data-action="openHighscores" data-tooltip="{{loc.highscores}}">
+        <i class="fa-solid fa-trophy"></i> {{loc.highscores}}
+      </button>
+    </h3>
+    <p class="section-sub">{{loc.gamesSub}}</p>
+
+    {{#if hasPremium}}
+      <div class="drawer-category">
+        <h4 class="drawer-category-heading"><i class="fa-solid fa-crown"></i> {{loc.premiumHeading}}</h4>
+        <div class="minigame-grid">
+          {{#each premiumGames}}
+            <button type="button" data-action="launchMinigame" data-game-id="{{id}}" class="minigame-card minigame-premium" data-tooltip="{{description}}">
+              <i class="{{icon}} minigame-icon"></i>
+              <span class="minigame-label">{{label}}</span>
+            </button>
+          {{/each}}
+          <div class="minigame-card minigame-coming-soon" data-tooltip="{{loc.comingSoonDesc}}">
+            <i class="fa-solid fa-lock minigame-icon"></i>
+            <span class="minigame-label">{{loc.comingSoonLabel}}</span>
+          </div>
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if hasClassic}}
+      <div class="drawer-category">
+        <h4 class="drawer-category-heading"><i class="fa-solid fa-chess-rook"></i> {{loc.classicHeading}}</h4>
+        <div class="minigame-grid">
+          {{#each classicGames}}
+            <button type="button" data-action="launchMinigame" data-game-id="{{id}}" class="minigame-card" data-tooltip="{{description}}">
+              <i class="{{icon}} minigame-icon"></i>
+              <span class="minigame-label">{{label}}</span>
+            </button>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#if hasMultiplayer}}
+      <div class="drawer-category">
+        <h4 class="drawer-category-heading"><i class="fa-solid fa-users"></i> {{loc.multiplayerHeading}}</h4>
+        <div class="minigame-grid">
+          {{#each multiplayerGames}}
+            <button type="button" data-action="launchMinigame" data-game-id="{{id}}" class="minigame-card minigame-multiplayer" data-tooltip="{{description}}">
+              <i class="{{icon}} minigame-icon"></i>
+              <span class="minigame-label">{{label}}</span>
+            </button>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+  </div>
+
+</div>

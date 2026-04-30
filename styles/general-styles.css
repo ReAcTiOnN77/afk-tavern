@@ -1,0 +1,1140 @@
+:root {
+  --tavern-bg: #1b110a;
+  --tavern-surface: #2b1e13;
+  --tavern-border: #4c3722;
+  --tavern-gold: #d2a84e;
+  --tavern-gold-dim: #8a6e3c;
+  --tavern-warm: #c47a3c;
+  --tavern-text: #e6d4ba;
+  --tavern-text-dim: #9a8770;
+  --tavern-green: #5a9e4b;
+  --tavern-red: #b84a3a;
+  --tavern-away: #6b5a48;
+  --tavern-back: #3a6b2e;
+}
+
+/* Break room window */
+
+.afk-tavern.break-room {
+  background: var(--tavern-bg);
+  border: 2px solid var(--tavern-border);
+  font-family: "Signika", "Palatino Linotype", serif;
+  overflow: visible !important;
+}
+
+.afk-tavern.break-room .window-header {
+  background: linear-gradient(180deg, #3a2a18 0%, #2a1d12 100%);
+  border-bottom: 1px solid var(--tavern-border);
+  color: var(--tavern-gold);
+  position: relative;
+}
+
+.afk-now-playing {
+  position: absolute;
+  bottom: 100%;
+  left: 25%;
+  width: 50%;
+  text-align: center;
+  font-size: 10px;
+  color: var(--tavern-gold);
+  background: rgba(42, 25, 12, 0.95);
+  padding: 4px 24px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  letter-spacing: 0.4px;
+}
+
+.break-room-wrapper {
+  padding: 0 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+/* Tavern banner */
+.tavern-banner {
+  border-bottom: 2px solid var(--tavern-gold-dim);
+  padding: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.tavern-sign {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.sign-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tavern-gold);
+  text-shadow: 0 2px 8px rgba(212, 164, 74, 0.3);
+  letter-spacing: 1px;
+}
+
+.sign-sub {
+  font-size: 12px;
+  color: var(--tavern-text-dim);
+  font-style: italic;
+}
+
+/* Fireplace theme */
+.theme-fireplace {
+  background: linear-gradient(180deg, #1a0e08 0%, #2a1508 40%, #1a0e08 100%);
+}
+
+.fire-glow {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 80px;
+  background: radial-gradient(ellipse, rgba(255, 120, 20, 0.25) 0%, rgba(255, 80, 10, 0.1) 40%, transparent 70%);
+  animation: fire-flicker 2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.ember {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ff8830;
+  opacity: 0;
+  pointer-events: none;
+  animation: ember-rise linear infinite;
+}
+
+.ember-1 { left: 35%; bottom: 5px; animation-duration: 2.5s; animation-delay: 0s; }
+.ember-2 { left: 50%; bottom: 8px; animation-duration: 3s; animation-delay: 0.4s; }
+.ember-3 { left: 65%; bottom: 3px; animation-duration: 2.8s; animation-delay: 1.1s; }
+.ember-4 { left: 42%; bottom: 6px; animation-duration: 3.2s; animation-delay: 1.4s; }
+.ember-5 { left: 58%; bottom: 4px; animation-duration: 2.6s; animation-delay: 2.3s; }
+
+/* Timer */
+.break-room-wrapper .break-timer-section { padding: 0 16px; }
+
+.timer-label {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--tavern-text-dim);
+  margin-bottom: 4px;
+}
+
+.break-room-wrapper .timer-display-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.break-room-wrapper .timer-display-wrapper .timer-display { flex: 1; }
+
+.btn-notify-bell {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(212, 164, 74, 0.08);
+  border: 1px solid var(--tavern-border);
+  border-radius: 6px;
+  color: var(--tavern-gold-dim);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, transform 0.1s;
+  padding: 0;
+}
+
+.btn-notify-bell:hover {
+  color: var(--tavern-gold);
+  background: rgba(212, 164, 74, 0.18);
+}
+
+.btn-notify-bell:active { transform: translateY(-50%) scale(0.9); }
+.btn-notify-bell:focus { outline: none; box-shadow: none; }
+
+.break-room-wrapper .timer-display {
+  padding: 12px;
+  background: var(--tavern-surface);
+  border-radius: 6px;
+  border: 1px solid var(--tavern-border);
+}
+
+.break-room-wrapper .timer-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.break-room-wrapper .timer-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 36px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.break-room-wrapper .timer-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 36px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.break-room-wrapper .timer-mm,
+.break-room-wrapper .timer-ss {
+  letter-spacing: 2px;
+  color: var(--tavern-text, #e8dfd0);
+}
+
+.break-room-wrapper .timer-icon {
+  color: var(--tavern-gold);
+  font-size: 18px;
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.break-room-wrapper .timer-colon {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0;
+  padding: 0 4px 0 2px;
+  transform: translateY(-8%);
+  display: inline-block;
+  color: var(--tavern-text, #e8dfd0);
+}
+
+.break-room-wrapper .timer-warning .timer-mm,
+.break-room-wrapper .timer-warning .timer-ss,
+.break-room-wrapper .timer-warning .timer-colon { color: var(--tavern-warm); }
+
+.break-room-wrapper .timer-urgent .timer-mm,
+.break-room-wrapper .timer-urgent .timer-ss,
+.break-room-wrapper .timer-urgent .timer-colon { color: var(--tavern-red); }
+
+.break-room-wrapper .timer-urgent .timer-mm,
+.break-room-wrapper .timer-urgent .timer-ss,
+.break-room-wrapper .timer-urgent .timer-colon { animation: pulse-urgent 1s ease-in-out infinite; }
+
+.break-room-wrapper .timer-urgent .timer-colon { animation: pulse-urgent-colon 1s ease-in-out infinite; }
+
+.break-room-wrapper .timer-progress-bar {
+  height: 4px;
+  background: var(--tavern-surface);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.break-room-wrapper .timer-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tavern-gold), var(--tavern-warm));
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+/* Break setup (GM) */
+.break-setup {
+  background: var(--tavern-surface);
+  border: 1px solid var(--tavern-border);
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.duration-label {
+  display: block;
+  font-size: 12px;
+  color: var(--tavern-text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.duration-controls + .duration-label { margin-top: 10px; }
+
+.duration-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.duration-preset {
+  background: var(--tavern-bg);
+  border: 1px solid var(--tavern-border);
+  color: var(--tavern-text-dim);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s ease;
+  flex: 1;
+}
+
+.duration-preset:hover,
+.duration-preset.active {
+  background: var(--tavern-gold-dim);
+  color: var(--tavern-bg);
+  border-color: var(--tavern-gold);
+}
+
+.break-duration-input {
+  width: 56px;
+  min-width: 56px;
+  background: var(--tavern-bg);
+  border: 1px solid var(--tavern-border);
+  color: var(--tavern-text);
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.end-time-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.break-end-time-input {
+  background: var(--tavern-bg);
+  border: 1px solid var(--tavern-border);
+  color: var(--tavern-text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  width: fit-content;
+  min-width: 70px;
+  max-width: 100px;
+  text-align: center;
+}
+
+.end-time-gmt {
+  font-size: 11px;
+  color: var(--tavern-text-dim);
+  white-space: nowrap;
+}
+
+.waiting-message {
+  text-align: center;
+  padding: 16px;
+  color: var(--tavern-text-dim);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* GM controls */
+.gm-controls { padding: 0 16px; }
+
+/* Buttons */
+.tavern-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  font-family: inherit;
+}
+
+.btn-start {
+  background: linear-gradient(180deg, #5a9e4b, #3a7a2e);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(58, 122, 46, 0.4);
+}
+
+.btn-start:hover {
+  background: linear-gradient(180deg, #6ab85a, #4a8a3e);
+  transform: translateY(-1px);
+}
+
+.btn-end {
+  background: linear-gradient(180deg, var(--tavern-warm), #a06030);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(196, 120, 58, 0.3);
+}
+
+.btn-end:hover {
+  background: linear-gradient(180deg, #d4884a, #b07040);
+  transform: translateY(-1px);
+}
+
+.btn-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-end.btn-all-ready {
+  background: linear-gradient(180deg, #5a9e4b, #3a7a2e);
+  box-shadow: 0 2px 6px rgba(58, 122, 46, 0.4);
+  animation: readyPulse 1.5s ease-in-out infinite;
+}
+
+.btn-end.btn-all-ready:hover {
+  background: linear-gradient(180deg, #6ab85a, #4a8a3e);
+}
+
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 2px 6px rgba(58, 122, 46, 0.4); }
+  50% { box-shadow: 0 2px 12px rgba(90, 158, 75, 0.7); }
+}
+
+.lobby-mode-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--tavern-text-dim);
+  cursor: pointer;
+}
+
+.lobby-mode-label i { font-size: 14px; }
+
+.break-setup-divider {
+  border-top: 1px solid var(--tavern-border);
+  margin: 8px 0 8px;
+  opacity: 0.5;
+}
+
+.btn-back {
+  background: linear-gradient(180deg, var(--tavern-gold), var(--tavern-gold-dim));
+  color: var(--tavern-bg);
+  padding: 6px 14px;
+  font-size: 12px;
+  width: auto;
+  box-shadow: 0 2px 6px rgba(212, 164, 74, 0.3);
+}
+
+.btn-back:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(212, 164, 74, 0.4);
+}
+
+.btn-away {
+  background: linear-gradient(180deg, #6b5a48, #4a3d30);
+  color: var(--tavern-text-dim);
+  padding: 6px 14px;
+  font-size: 12px;
+  width: auto;
+  border: 1px solid var(--tavern-border);
+}
+
+.btn-away:hover {
+  background: linear-gradient(180deg, #7b6a58, #5a4d40);
+  color: var(--tavern-text);
+  transform: translateY(-1px);
+}
+
+.btn-subtle {
+  background: var(--tavern-surface);
+  color: var(--tavern-text-dim);
+  border: 1px solid var(--tavern-border);
+  padding: 6px 14px;
+  font-size: 12px;
+  width: auto;
+}
+
+.btn-subtle:hover {
+  background: var(--tavern-border);
+  color: var(--tavern-text);
+}
+
+.all-back-badge {
+  background: var(--tavern-green);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-heading .all-back-badge { margin-left: auto; }
+
+/* Player status */
+.player-status-section { padding: 0 16px; }
+
+.section-heading {
+  font-size: 14px;
+  color: var(--tavern-gold);
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--tavern-border);
+  padding-bottom: 6px;
+}
+
+.section-sub {
+  font-size: 11px;
+  color: var(--tavern-text-dim);
+  font-style: italic;
+  margin: -4px 0 8px 0;
+}
+
+.player-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--tavern-border);
+  transition: all 0.3s ease;
+}
+
+.player-away { background: rgba(107, 90, 72, 0.2); opacity: 0.7; }
+.player-back { background: rgba(58, 107, 46, 0.15); border-color: var(--tavern-green); }
+
+.player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--tavern-border);
+  object-fit: cover;
+}
+
+.player-back .player-avatar { border-color: var(--tavern-green); }
+
+.player-info { display: flex; flex-direction: column; flex: 1; }
+.player-name { font-size: 13px; font-weight: 600; }
+
+.character-name {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--tavern-text-dim);
+  margin-left: 3px;
+}
+
+.player-status-badge {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.player-away .player-status-badge { color: var(--tavern-text-dim); }
+.player-back .player-status-badge { color: var(--tavern-green); }
+.player-status-badge .fa-dice { color: var(--tavern-gold); }
+
+.gm-badge {
+  display: inline-block;
+  background: linear-gradient(180deg, var(--tavern-gold), var(--tavern-gold-dim));
+  color: var(--tavern-bg);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.player-gm { border-color: var(--tavern-border); }
+.player-gm.player-back { border-color: var(--tavern-green); }
+.player-gm .player-avatar { border-color: var(--tavern-border); }
+.player-gm.player-back .player-avatar { border-color: var(--tavern-green); }
+.player-self { border-color: var(--tavern-gold-dim); }
+.player-self .player-avatar { border-color: var(--tavern-gold-dim); }
+.player-self.player-back { border-color: var(--tavern-green); }
+.player-self.player-back .player-avatar { border-color: var(--tavern-green); }
+
+.player-offline {
+  background: rgba(50, 45, 40, 0.25);
+  opacity: 0.4;
+  filter: grayscale(0.7);
+  border-color: rgba(100, 90, 80, 0.3);
+}
+
+.player-offline .player-avatar { border-color: rgba(100, 90, 80, 0.4); }
+.player-offline .player-status-badge { color: var(--tavern-text-dim); }
+
+/* Games drawer tab */
+.drawer-tab {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 60px;
+  background: var(--tavern-surface);
+  border: 2px solid var(--tavern-border);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--tavern-gold-dim);
+  font-size: 14px;
+  transition: background 0.2s ease, color 0.2s ease, left 0.2s ease;
+  z-index: 1;
+  font-family: "Signika", "Palatino Linotype", serif;
+}
+
+.drawer-tab:hover {
+  background: var(--tavern-border);
+  color: var(--tavern-gold);
+}
+
+.drawer-tab.drawer-tab-pulse {
+  animation: drawerTabPulse 2s ease-in-out 3;
+}
+
+@keyframes drawerTabPulse {
+  0%, 100% { border-color: var(--tavern-border); box-shadow: none; }
+  50% { border-color: var(--tavern-gold); box-shadow: 0 0 8px rgba(212, 168, 75, 0.4); }
+}
+
+.drawer-tab.drawer-open {
+  left: calc(100% + 260px);
+  color: var(--tavern-gold);
+  background: var(--tavern-border);
+}
+
+/* Games drawer */
+.games-drawer {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 260px;
+  height: 100%;
+  background: var(--tavern-bg);
+  border: 2px solid var(--tavern-border);
+  border-radius: 0 6px 6px 0;
+  padding: 12px;
+  overflow-y: auto;
+  pointer-events: none;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.2s ease;
+  z-index: 1;
+  font-family: "Signika", "Palatino Linotype", serif;
+}
+
+.games-drawer.drawer-open {
+  pointer-events: all;
+  clip-path: inset(0 0 0 0);
+}
+
+.games-drawer .section-heading { font-size: 13px; margin-top: 0; }
+
+.games-drawer .btn-highscores {
+  font-size: 10px;
+  padding: 2px 6px;
+  line-height: 1.4;
+  height: auto;
+  width: auto;
+  gap: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(212, 164, 74, 0.08);
+  color: var(--tavern-gold-dim);
+  border: 1px solid var(--tavern-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.games-drawer .btn-highscores:hover {
+  background: rgba(212, 164, 74, 0.18);
+  color: var(--tavern-gold);
+  border-color: var(--tavern-gold-dim);
+}
+
+.games-drawer .section-sub { margin-bottom: 6px; }
+.games-drawer .minigame-card { padding: 10px; }
+.games-drawer .minigame-icon { font-size: 18px; width: 26px; }
+.games-drawer .minigame-label { font-size: 12px; }
+.drawer-category { margin-bottom: 10px; }
+
+.drawer-category-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tavern-gold-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 8px 0 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--tavern-border);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.drawer-category-heading i { font-size: 10px; }
+.minigame-premium { border-left: 2px solid var(--tavern-gold-dim); }
+.minigame-multiplayer { border-left: 2px solid var(--tavern-green); }
+
+.games-drawer::-webkit-scrollbar { width: 4px; }
+.games-drawer::-webkit-scrollbar-track { background: transparent; }
+.games-drawer::-webkit-scrollbar-thumb { background: var(--tavern-border); border-radius: 2px; }
+.games-drawer::-webkit-scrollbar-thumb:hover { background: var(--tavern-gold-dim); }
+
+.minigame-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.minigame-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--tavern-surface);
+  border: 1px solid var(--tavern-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  color: var(--tavern-text);
+  font-family: inherit;
+}
+
+.minigame-card:hover {
+  border-color: var(--tavern-gold-dim);
+  transform: translateX(2px);
+  background: rgba(212, 164, 74, 0.06);
+}
+
+.minigame-icon {
+  font-size: 22px;
+  color: var(--tavern-gold);
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.minigame-label { font-weight: 600; font-size: 13px; }
+
+.minigame-coming-soon {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+  border-style: dashed !important;
+  border-color: var(--tavern-gold-dim) !important;
+  background: transparent !important;
+}
+
+.minigame-coming-soon .minigame-icon { color: var(--tavern-gold-dim); }
+.minigame-coming-soon .minigame-label { color: var(--tavern-gold-dim); font-style: italic; }
+
+/* Config dialogs */
+.afk-tavern-config-dialog {
+  background: var(--tavern-bg);
+  color: var(--tavern-text);
+  font-family: "Signika", "Palatino Linotype", serif;
+}
+
+.afk-tavern-config-dialog .window-header {
+  background: var(--tavern-surface);
+  border-bottom: 1px solid var(--tavern-border);
+  color: var(--tavern-gold);
+}
+
+.afk-tavern-config-dialog .dialog-buttons,
+.afk-tavern-config-dialog .form-footer { padding: 8px 10px; gap: 6px; }
+
+.afk-tavern-config-dialog .dialog-buttons button,
+.afk-tavern-config-dialog .dialog-button,
+.afk-tavern-config-dialog .form-footer button {
+  background: var(--tavern-border);
+  color: var(--tavern-text);
+  border: 1px solid rgba(212, 164, 74, 0.15);
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.afk-tavern-config-dialog .dialog-buttons button:hover,
+.afk-tavern-config-dialog .dialog-button:hover,
+.afk-tavern-config-dialog .form-footer button:hover {
+  background: var(--tavern-gold-dim);
+  color: var(--tavern-bg);
+  border-color: var(--tavern-gold);
+}
+
+.afk-tavern-config-dialog .dialog-buttons button.default,
+.afk-tavern-config-dialog .dialog-button.default,
+.afk-tavern-config-dialog .form-footer button.default {
+  background: linear-gradient(180deg, var(--tavern-green), #3a7a2e);
+  color: #fff;
+  border-color: var(--tavern-green);
+}
+
+.afk-tavern-config-dialog .dialog-buttons button.default:hover,
+.afk-tavern-config-dialog .dialog-button.default:hover,
+.afk-tavern-config-dialog .form-footer button.default:hover {
+  background: linear-gradient(180deg, #6ab85a, #4a8a3e);
+}
+
+.afk-tavern-config { padding: 10px 12px; }
+
+.config-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.config-icon { font-size: 16px; color: var(--tavern-gold); }
+.config-title { font-size: 14px; font-weight: 700; color: var(--tavern-gold); letter-spacing: 0.3px; }
+.config-desc { font-size: 14px; color: var(--tavern-text-dim); line-height: 1.4; margin: 0; }
+.config-divider { height: 1px; background: var(--tavern-border); margin: 8px 0; }
+.config-field { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.config-label { font-weight: 600; color: var(--tavern-text); text-transform: uppercase; letter-spacing: 0.4px; font-size: 10px; }
+
+.config-select {
+  background: var(--tavern-surface);
+  color: var(--tavern-text);
+  border: 1px solid var(--tavern-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  flex: 1;
+  transition: border-color 0.15s ease;
+}
+
+.config-select:hover, .config-select:focus { border-color: var(--tavern-gold-dim); outline: none; }
+.config-select option { background: var(--tavern-surface); color: var(--tavern-text); }
+
+.config-input {
+  background: var(--tavern-surface);
+  color: var(--tavern-text);
+  border: 1px solid var(--tavern-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  text-align: center;
+  width: 56px;
+  transition: border-color 0.15s ease;
+}
+
+.config-input:hover, .config-input:focus { border-color: var(--tavern-gold-dim); outline: none; }
+.config-custom-disabled { opacity: 0.35; pointer-events: none; }
+
+.config-custom-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 0;
+  transition: opacity 0.2s ease;
+}
+
+.config-custom-fields .config-field { display: flex; flex-direction: column; gap: 3px; }
+.config-custom-fields .config-label { font-size: 11px; }
+.config-custom-fields .config-input { width: 100%; }
+.config-custom-fields .config-checkbox { width: auto; margin: 4px 0; }
+.config-custom-fields .config-field-checkbox { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+.config-custom-disabled .config-input { background: rgba(26, 18, 11, 0.5); cursor: not-allowed; }
+.config-custom-disabled .config-label { color: var(--tavern-text-dim); }
+
+.config-note {
+  font-size: 10px;
+  color: var(--tavern-text-dim);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.config-note i { color: var(--tavern-gold-dim); font-size: 10px; }
+
+/* Spectate */
+.btn-spectate {
+  width: auto !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  background: transparent;
+  border: 1px solid var(--tavern-border);
+  color: var(--tavern-text-dim);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-spectate:hover {
+  border-color: var(--tavern-gold-dim);
+  color: var(--tavern-gold);
+  background: rgba(212, 164, 74, 0.1);
+}
+
+.afk-tavern.spectate-view {
+  background: var(--tavern-bg);
+  border: 2px solid var(--tavern-border);
+  font-family: "Signika", "Palatino Linotype", serif;
+}
+
+.afk-tavern.spectate-view .window-header {
+  background: linear-gradient(180deg, #3a2a18 0%, #2a1d12 100%);
+  border-bottom: 1px solid var(--tavern-border);
+  color: var(--tavern-gold);
+}
+
+.spectate-wrapper { display: flex; flex-direction: column; gap: 0; }
+
+.spectate-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, transparent, rgba(212, 164, 74, 0.08), transparent);
+  border-bottom: 1px solid var(--tavern-border);
+  font-size: 12px;
+  color: var(--tavern-text-dim);
+}
+
+.spectate-banner i { color: var(--tavern-gold-dim); animation: spectate-eye-pulse 2s ease-in-out infinite; }
+.spectate-banner strong { color: var(--tavern-gold); }
+.spectate-content { pointer-events: none; user-select: none; position: relative; }
+
+.spectate-content .mp-footer,
+.spectate-content .afk-footer,
+.spectate-content [data-action="rematch"],
+.spectate-content [data-action="newGame"],
+.spectate-content [data-action="startGame"] { display: none !important; }
+
+.spectate-content::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Mini bar */
+.afk-mini-bar {
+  position: fixed;
+  bottom: 80px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: linear-gradient(180deg, #3a2a18 0%, #2a1d12 100%);
+  border: 2px solid var(--tavern-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 100;
+  font-family: "Signika", "Palatino Linotype", serif;
+  animation: afk-mini-slide-in 0.3s ease-out;
+  cursor: pointer;
+}
+
+.afk-mini-timer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--tavern-gold);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.afk-mini-timer i { font-size: 12px; opacity: 0.7; }
+.afk-mini-time.timer-warning { color: var(--tavern-warm); }
+.afk-mini-time.timer-urgent { color: var(--tavern-red); animation: pulse-urgent 1s ease-in-out infinite; }
+
+.afk-mini-status-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 10px;
+  min-width: 90px;
+  border-radius: 4px;
+  border: 1px solid var(--tavern-border);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.afk-mini-away { background: transparent; color: var(--tavern-text-dim); border-color: var(--tavern-border); }
+.afk-mini-away:hover { border-color: var(--tavern-gold-dim); color: var(--tavern-text); }
+.afk-mini-back { background: var(--tavern-green); color: #1a120b; border-color: var(--tavern-green); }
+.afk-mini-back:hover { filter: brightness(1.1); }
+
+.afk-mini-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--tavern-border);
+  background: transparent;
+  color: var(--tavern-gold-dim);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.afk-mini-expand:hover {
+  background: rgba(212, 164, 74, 0.1);
+  border-color: var(--tavern-gold-dim);
+  color: var(--tavern-gold);
+}
+
+.afk-mini-bar button { cursor: pointer; }
+
+.afk-mini-roster {
+  position: fixed;
+  left: 8px;
+  bottom: 120px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(58, 42, 24, 0.85) 0%, rgba(42, 29, 18, 0.85) 100%);
+  border: 2px solid var(--tavern-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 100;
+  font-family: "Signika", "Palatino Linotype", serif;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: afk-mini-slide-in 0.2s ease-out;
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
+}
+
+.afk-mini-roster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.afk-mini-roster-row + .afk-mini-roster-row { border-top: 1px solid rgba(255,255,255,0.06); }
+
+.roster-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.roster-status { font-size: 10px; white-space: nowrap; }
+.roster-status i { font-size: 9px; margin-right: 2px; }
+.roster-back .roster-status { color: var(--tavern-green); }
+.roster-away .roster-status { color: var(--tavern-warm); }
+.roster-offline .roster-status { color: var(--tavern-text-dim); }
+
+/* Music controls */
+#afk-tavern-break-room .afk-music-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#afk-tavern-break-room .afk-music-label {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tavern-gold-dim);
+  font-size: 11px;
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+  white-space: nowrap;
+}
+
+#afk-tavern-break-room .afk-music-controls {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--tavern-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#afk-tavern-break-room .afk-music-controls button {
+  background: transparent;
+  border: none;
+  color: var(--tavern-gold-dim);
+  padding: 0 7px;
+  margin: 0;
+  height: 100%;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+#afk-tavern-break-room .afk-music-controls button:hover { color: var(--tavern-gold); background: rgba(212, 164, 74, 0.08); }
+#afk-tavern-break-room .afk-music-controls button:focus { outline: none; box-shadow: none; }
+
+/* Settings app */
+.afk-settings-file-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.afk-tavern-settings .form-fields { display: flex !important; justify-content: flex-end !important; }
+.afk-settings-file-row input[type="text"] { flex: 1; max-width: 180px; }
+
+.afk-settings-icon-btn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--color-border-light-tertiary, rgba(255,255,255,0.1));
+  border-radius: 4px;
+  color: var(--color-text-light-6, #999);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.afk-settings-icon-btn:hover {
+  color: var(--color-text-light-0, #fff);
+  border-color: var(--color-border-light-secondary, rgba(255,255,255,0.2));
+}
+
+.afk-tavern-settings fieldset { border: none; padding: 0; margin: 0; }
+.afk-tavern-settings fieldset > legend { display: none; }

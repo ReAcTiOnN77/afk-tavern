@@ -1,0 +1,22 @@
+<div class="c4-wrapper {{#if isGameOver}}game-ended{{/if}} {{#if isWin}}game-won{{/if}} {{#if isLoss}}game-lost{{/if}}">
+  <div class="c4-board-frame">
+    <div class="c4-ghost-row">
+      {{#each colHeaders}}
+        <div class="c4-ghost-slot" data-col="{{col}}"></div>
+      {{/each}}
+    </div>
+    <div class="c4-board">
+      <div class="c4-grid">
+        {{#each cells}}
+          <div class="c4-slot {{#if isWinCell}}c4-slot-win{{/if}} {{#if isLastDrop}}c4-slot-just-dropped{{/if}}" data-action="dropPiece" data-col="{{col}}">
+            <div class="c4-hole {{#if isLastDrop}}c4-hole-just-dropped{{/if}}">
+              {{#if raw}}
+                <div class="c4-piece c4-piece-{{raw}} {{#if isWinCell}}c4-piece-winner{{/if}} {{#if isLastDrop}}c4-piece-just-dropped{{/if}}"></div>
+              {{/if}}
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+</div>

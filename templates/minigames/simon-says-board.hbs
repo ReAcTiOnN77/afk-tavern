@@ -1,0 +1,41 @@
+<div class="minigame-board-part">
+{{#if notStarted}}
+  <div class="ss-status">
+    <span class="ss-status-text ss-watching"><i class="fa-solid fa-eye"></i> {{loc.watch}}</span>
+  </div>
+{{/if}}
+{{#if gameOver}}
+  <div class="solo-results-overlay solo-results-loss">
+    <div class="solo-results-card">
+      <span class="solo-results-title">{{loc.gameOver}}</span>
+      <span class="solo-results-score">{{round}}</span>
+      <span class="solo-results-label">{{loc.round}}</span>
+      <button type="button" data-action="newGame" class="tavern-btn btn-start">
+        <i class="fa-solid fa-rotate"></i> {{loc.tryAgain}}
+      </button>
+    </div>
+  </div>
+{{/if}}
+{{#if isPlaying}}
+  <div class="ss-status">
+    {{#if isShowingSequence}}
+      <span class="ss-status-text ss-watching"><i class="fa-solid fa-eye"></i> {{loc.watch}}</span>
+    {{else}}
+      <span class="ss-status-text ss-your-turn"><i class="fa-solid fa-hand-pointer"></i> {{loc.yourTurn}} ({{inputProgress}} / {{seqLen}})</span>
+    {{/if}}
+  </div>
+{{/if}}
+
+<div class="game-board-frame">
+  <div class="ss-grid ss-grid-{{gridCols}} {{gridLayout}}">
+    {{#each colours}}
+      <button type="button" class="ss-orb {{#if isActive}}ss-orb-active{{/if}}" data-action="clickColour" data-element-id="{{id}}" style="--orb-color: {{color}}; --orb-glow: {{glow}};"></button>
+    {{/each}}
+  </div>
+</div>
+{{#if notStarted}}
+  <button type="button" data-action="startGame" class="tavern-btn btn-start">
+    <i class="fa-solid fa-play"></i> {{loc.start}}
+  </button>
+{{/if}}
+</div>

@@ -1,0 +1,32 @@
+<section class="afk-settings-page">
+
+{{#if description}}
+  <p class="hint" style="margin-bottom: 0.5rem;">{{{description}}}</p>
+{{/if}}
+
+<div class="form-group">
+  <label style="white-space:nowrap;">{{enableGamesTabLabel}}</label>
+  <div class="form-fields">
+    <input type="checkbox" name="enableGamesTab" {{checked enableGamesTab}}>
+  </div>
+  <p class="hint">{{enableGamesTabHint}}</p>
+</div>
+
+<hr style="border-color: var(--tavern-border, #5a4025); margin: 8px 0;">
+
+<p class="hint" style="margin-bottom: 0.5rem;">{{gameListHint}}</p>
+
+{{#each games}}
+<div class="form-group">
+  <label style="display:flex;align-items:center;gap:6px;white-space:nowrap;">
+    <i class="{{this.icon}}" style="width:18px;text-align:center;color:var(--tavern-gold, #d4a84b);"></i>
+    <span>{{this.label}}</span>
+    <span style="font-size:10px;opacity:0.6;">({{this.category}})</span>
+  </label>
+  <div class="form-fields">
+    <input type="checkbox" name="game_{{this.id}}" {{checked this.enabled}}>
+  </div>
+</div>
+{{/each}}
+
+</section>

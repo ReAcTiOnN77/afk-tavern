@@ -1,0 +1,32 @@
+<section class="afk-settings-page">
+
+{{#if description}}
+  <p class="hint" style="margin-bottom: 0.5rem;">{{{description}}}</p>
+{{/if}}
+
+<div class="form-group">
+  <label style="white-space:nowrap;">{{showOfflineLabel}}</label>
+  <div class="form-fields">
+    <input type="checkbox" name="showOfflinePlayers" {{checked showOffline}}>
+  </div>
+  <p class="hint">{{showOfflineHint}}</p>
+</div>
+
+<hr style="border-color: var(--tavern-border, #5a4025); margin: 8px 0;">
+
+<p class="hint" style="margin-bottom: 0.5rem;">{{playerListHint}}</p>
+
+{{#each players}}
+<div class="form-group">
+  <label style="display:flex;align-items:center;gap:6px;">
+    <img src="{{this.avatar}}" alt="" style="width:24px;height:24px;border-radius:50%;border:1px solid {{this.color}};">
+    <span style="color:{{this.color}}">{{this.name}}</span>
+    {{#if this.isGM}}<span style="font-size:10px;opacity:0.6;">(GM)</span>{{/if}}
+  </label>
+  <div class="form-fields">
+    <input type="checkbox" name="player_{{this.id}}" {{checked this.visible}}>
+  </div>
+</div>
+{{/each}}
+
+</section>

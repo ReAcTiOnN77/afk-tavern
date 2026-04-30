@@ -1,0 +1,31 @@
+<div class="minigame-board-part">
+<div class="game-board-frame">
+  <div class="ws-scrambled" style="--ws-tile-size: {{tileSize}}px;">
+    {{#each letters}}
+      <span class="ws-letter {{#if isHint}}ws-hint{{/if}}">{{char}}</span>
+    {{/each}}
+  </div>
+  <div class="ws-word-display" style="--ws-tile-size: {{tileSize}}px;">
+    {{#each wordLetters}}
+      <span class="ws-slot {{#if isRevealed}}ws-revealed{{/if}} {{#if isHinted}}ws-hinted{{/if}}">{{char}}</span>
+    {{/each}}
+  </div>
+  {{#if gameMessage}}
+    <div class="ws-message ws-message-{{messageType}}">{{gameMessage}}</div>
+  {{/if}}
+</div>
+<div class="ws-input-row">
+  <input type="text" class="ws-input" placeholder="{{loc.placeholder}}" value="{{guess}}" maxlength="{{wordLength}}">
+  <button type="button" data-action="submitGuess" class="tavern-btn btn-start ws-submit">
+    <i class="fa-solid fa-check"></i>
+  </button>
+</div>
+<div class="ws-actions">
+  <button type="button" data-action="hint" class="tavern-btn btn-subtle">
+    <i class="fa-solid fa-lightbulb"></i> {{loc.hint}}
+  </button>
+  <button type="button" data-action="skip" class="tavern-btn btn-subtle">
+    <i class="fa-solid fa-forward"></i> {{loc.skip}}
+  </button>
+</div>
+</div>

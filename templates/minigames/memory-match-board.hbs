@@ -1,0 +1,32 @@
+<div class="minigame-board-part">
+{{#if gameComplete}}
+  <div class="solo-results-overlay">
+    <div class="solo-results-card">
+      <span class="solo-results-title">🎉 {{loc.victory}} 🎉</span>
+      <span class="solo-results-score">{{moves}}</span>
+      <span class="solo-results-label">{{victoryStats}}</span>
+      <button type="button" data-action="newGame" class="tavern-btn btn-start">
+        <i class="fa-solid fa-rotate"></i> {{loc.playAgain}}
+      </button>
+    </div>
+  </div>
+{{/if}}
+
+<div class="game-board-frame">
+  <div class="mm-grid">
+    {{#each cards}}
+      <div class="mm-card {{#if isFlipped}}mm-flipped{{/if}} {{#if isMatched}}mm-matched{{/if}}"
+           data-action="flipCard" data-index="{{index}}">
+        <div class="mm-card-inner">
+          <div class="mm-card-front">
+            <i class="fa-solid fa-question"></i>
+          </div>
+          <div class="mm-card-back">
+            <span class="mm-card-emoji">{{emoji}}</span>
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>
+</div>

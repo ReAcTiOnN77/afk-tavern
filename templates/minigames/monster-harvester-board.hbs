@@ -1,0 +1,51 @@
+<div class="minigame-board-part mh-wrapper">
+<div class="minigame-header">
+  <div class="mm-stats-bar">
+    <div class="mm-stat">
+      <i class="fa-solid fa-knife-kitchen"></i>
+      <span class="mm-stat-value mh-counter">0</span>
+      <span class="mm-stat-label">{{loc.harvested}}</span>
+    </div>
+    <div class="mm-stat">
+      <span class="mm-stat-label mh-strikes">{{strikesDisplay}}</span>
+    </div>
+    <div class="mm-stat">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span class="mm-stat-value mh-progress">{{totalDrops}}</span>
+      <span class="mm-stat-label">{{loc.remaining}}</span>
+    </div>
+  </div>
+  <div class="minigame-difficulty minigame-difficulty-{{difficultyLevel}}">
+    <i class="fa-solid fa-signal"></i> {{difficulty}}
+  </div>
+</div>
+
+<div class="mh-preview">
+  {{#each itemSummary}}
+    <div class="mh-preview-item" data-tooltip="{{this.name}} (×{{this.count}})">
+      <img src="{{this.img}}" alt="">
+      <span>×{{this.count}}</span>
+    </div>
+  {{/each}}
+</div>
+
+<div class="mh-box">
+  <div class="mh-start-overlay">
+    <p class="mh-instructions">{{loc.instructions}}</p>
+    <button type="button" class="tavern-btn btn-start" data-action="startGame">
+      <i class="fa-solid fa-play"></i> {{loc.start}}
+    </button>
+    <p class="mh-hint">{{loc.hint}}</p>
+  </div>
+
+  <div class="mh-results" style="display:none;">
+    <div class="mh-results-inner">
+      <span class="mh-results-grade"></span>
+      <span class="mh-results-score"></span>
+      <button type="button" class="tavern-btn btn-start" data-action="newGame">
+        <i class="fa-solid fa-rotate"></i> {{loc.newGame}}
+      </button>
+    </div>
+  </div>
+</div>
+</div>

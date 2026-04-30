@@ -1,0 +1,39 @@
+<div class="minigame-header">
+{{#if isMultiplayer}}
+  <div class="mp-players">
+    <div class="mp-player mp-player-left {{#if isMyTurn}}mp-player-active{{/if}} {{playerLeftCls}}">
+      {{{playerLeftPreview}}}
+      <div class="mp-player-info">
+        <span class="mp-player-name">{{myName}}</span>
+        <span class="mp-player-score">{{myScore}}</span>
+      </div>
+    </div>
+    <span class="mp-vs">{{loc.vs}}</span>
+    <div class="mp-player mp-player-right {{#unless isMyTurn}}{{#unless isGameOver}}mp-player-active{{/unless}}{{/unless}} {{playerRightCls}}">
+      <div class="mp-player-info">
+        <span class="mp-player-name">{{opponentName}}</span>
+        <span class="mp-player-score">{{opponentScore}}</span>
+      </div>
+      {{{playerRightPreview}}}
+    </div>
+  </div>
+  <div class="mp-status {{#if isWin}}mp-status-win{{else if isLoss}}mp-status-loss{{else if isDraw}}mp-status-draw{{/if}}">
+    {{statusText}}
+  </div>
+{{else}}
+  <div class="mm-stats-bar">
+    {{#each stats}}
+      <div class="mm-stat {{this.cls}}">
+        <i class="{{this.icon}}"></i>
+        <span class="mm-stat-label">{{this.label}}</span>
+        <span class="mm-stat-value {{this.valueCls}}">{{this.value}}</span>
+      </div>
+    {{/each}}
+  </div>
+  {{#if difficulty}}
+    <div class="minigame-difficulty minigame-difficulty-{{difficultyLevel}}">
+      <i class="fa-solid fa-signal"></i> {{difficulty}}
+    </div>
+  {{/if}}
+{{/if}}
+</div>
