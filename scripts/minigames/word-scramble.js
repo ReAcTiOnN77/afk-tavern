@@ -2,6 +2,7 @@ import { registerGameForSpectate, notifySpectateUpdate, registerSpectateConfig }
 import { ApplicationV2, HandlebarsApplicationMixin, difficultyLevel, cleanupSoloGame, buildLocCache, soloGameDefaults, soloGameParts } from "./minigame-helpers.js";
 import { MODULE_ID, i18n } from "../afk-tavern.js";
 import { submitHighscore, getMyBest } from "../highscore-manager.js";
+import { loadCustomizableJson } from "../generic-helpers.js";
 
 const getLoc = buildLocCache(() => ({
   score: i18n("AFK_TAVERN.wordScramble.score"),
@@ -15,15 +16,14 @@ const getLoc = buildLocCache(() => ({
 
 let _wordLists = null;
 
+// Called from the customWordScrambleWordsPath setting onChange so the next
+// game re-fetches from the new path (or the shipped default when cleared).
+export function _invalidateWordListCache() { _wordLists = null; }
+
 async function getWordLists(moduleId) {
   if (_wordLists) return _wordLists;
-  try {
-    const response = await fetch(`modules/${moduleId}/assets/word-scramble-words.json`);
-    if (response.ok) _wordLists = await response.json();
-  } catch (e) {
-    console.warn("AFK Tavern | Failed to load word scramble words", e);
-  }
-  _wordLists ??= { easy: [], medium: [], hard: [] };
+  const data = await loadCustomizableJson(moduleId, "word-scramble-words.json", "customWordScrambleWordsPath");
+  _wordLists = data ?? { easy: [], medium: [], hard: [] };
   _wordLists.random = [...(_wordLists.easy ?? []), ...(_wordLists.medium ?? []), ...(_wordLists.hard ?? [])];
   return _wordLists;
 }
