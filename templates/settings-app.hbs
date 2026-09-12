@@ -22,6 +22,11 @@
             <i class="fa-solid fa-volume-high"></i>
           </button>
         {{/if}}
+        {{#if this.clearable}}
+          <button type="button" class="afk-settings-icon-btn" data-action="clearPath" data-key="{{this.key}}" data-tooltip="{{localize "AFK_TAVERN.settingsApp.clearPath"}}">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        {{/if}}
       </div>
     {{else if this.isSelect}}
       <select name="{{this.key}}">

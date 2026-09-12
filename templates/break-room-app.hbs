@@ -16,7 +16,7 @@
 
   {{!-- Timer Section --}}
   <div class="break-timer-section">
-    {{#if breakActive}}
+    {{#if isRealBreak}}
       <span class="timer-label">{{timerLabel}}</span>
       <div class="timer-display-wrapper">
         <div class="timer-display {{#if timerUrgent}}timer-urgent{{else if timerWarning}}timer-warning{{/if}}">
@@ -35,6 +35,35 @@
       <div class="timer-progress-bar">
         <div class="timer-progress-fill" style="width: {{progressPercent}}%"></div>
       </div>
+    {{else if playerMode}}
+      <div class="player-tavern-banner">
+        <i class="fa-solid fa-dice"></i>
+        <span class="player-tavern-banner-text">{{playerTavernLabel}}</span>
+      </div>
+      {{#if isGM}}
+        <div class="break-setup">
+          <label class="duration-label">{{loc.durationLabel}}</label>
+          <div class="duration-controls">
+            <button type="button" data-action="setDuration" data-minutes="5" class="duration-preset {{#if preset5Active}}active{{/if}}">5m</button>
+            <button type="button" data-action="setDuration" data-minutes="10" class="duration-preset {{#if preset10Active}}active{{/if}}">10m</button>
+            <button type="button" data-action="setDuration" data-minutes="15" class="duration-preset {{#if preset15Active}}active{{/if}}">15m</button>
+            <button type="button" data-action="setDuration" data-minutes="20" class="duration-preset {{#if preset20Active}}active{{/if}}">20m</button>
+            <button type="button" data-action="setDuration" data-minutes="25" class="duration-preset {{#if preset25Active}}active{{/if}}">25m</button>
+            <button type="button" data-action="setDuration" data-minutes="30" class="duration-preset {{#if preset30Active}}active{{/if}}">30m</button>
+            <input type="number" class="break-duration-input" value="{{selectedDurationMinutes}}" min="1" max="180" step="1">
+          </div>
+          <label class="duration-label">{{loc.endTimeLabel}}</label>
+          <div class="end-time-controls">
+            <input type="time" class="break-end-time-input" value="{{endTimeValue}}">
+            <span class="end-time-gmt">{{gmtLabel}}</span>
+          </div>
+          <div class="break-setup-divider"></div>
+          <label class="lobby-mode-label" data-action="toggleLobby" data-tooltip="{{loc.lobbyHint}}">
+            <i class="fa-solid {{#if lobbyMode}}fa-square-check{{else}}fa-square{{/if}}"></i>
+            <span>{{loc.lobbyLabel}}</span>
+          </label>
+        </div>
+      {{/if}}
     {{else}}
       {{#if isGM}}
         <div class="break-setup">
@@ -68,23 +97,46 @@
     {{/if}}
   </div>
 
+  {{!-- Player-mode notice for non-GMs (small friendly info blurb) --}}
+  {{#if playerMode}}
+    {{#unless isGM}}
+      <div class="player-mode-notice">
+        <i class="fa-solid fa-dice"></i>
+        <span>{{loc.gamesSub}}</span>
+      </div>
+    {{/unless}}
+  {{/if}}
+
   {{!-- GM Controls --}}
   {{#if isGM}}
     <div class="gm-controls">
-      {{#if breakActive}}
+      {{#if isRealBreak}}
         <button type="button" data-action="endBreak" class="{{gmBtnCls}}">
           <span class="btn-inner"><i class="fa-solid fa-play"></i> {{gmBtnLabel}}</span>
         </button>
       {{else}}
-        <button type="button" data-action="startBreak" class="tavern-btn btn-start">
-          <span class="btn-inner"><i class="fa-solid fa-beer-mug-empty"></i> {{loc.startBreak}}</span>
-        </button>
+        <div class="gm-controls-row">
+          <button type="button" data-action="startBreak" class="tavern-btn btn-start">
+            <span class="btn-inner"><i class="fa-solid fa-beer-mug-empty"></i> {{loc.startBreak}}</span>
+          </button>
+          {{#if showViewTavernBtn}}
+            {{#if viewTavernBtnActive}}
+              <button type="button" data-action="viewTavern" class="tavern-btn btn-view-tavern">
+                <span class="btn-inner"><i class="fa-solid fa-eye"></i> {{loc.viewTavern}}</span>
+              </button>
+            {{else}}
+              <button type="button" class="tavern-btn btn-view-tavern btn-view-tavern-disabled" disabled data-tooltip="{{loc.viewTavernDisabledTip}}">
+                <span class="btn-inner"><i class="fa-solid fa-eye-slash"></i> {{loc.viewTavern}}</span>
+              </button>
+            {{/if}}
+          {{/if}}
+        </div>
       {{/if}}
     </div>
   {{/if}}
 
   {{!-- Player Status --}}
-  {{#if breakActive}}
+  {{#if showPatrons}}
     <div class="player-status-section">
       <h3 class="section-heading">
         <i class="fa-solid fa-users"></i> {{loc.patronsHeading}}
@@ -106,9 +158,11 @@
             </div>
             {{#unless isOffline}}
               {{#if isSelf}}
-                <button type="button" data-action="{{btnAction}}" class="{{btnCls}}">
-                  <i class="{{btnIcon}}"></i> {{btnLabel}}
-                </button>
+                {{#unless hideOwnBtn}}
+                  <button type="button" data-action="{{btnAction}}" class="{{btnCls}}">
+                    <i class="{{btnIcon}}"></i> {{btnLabel}}
+                  </button>
+                {{/unless}}
               {{else}}
                 {{#if canSpectate}}
                   <button type="button" data-action="spectatePlayer" data-user-id="{{userId}}" class="tavern-btn btn-spectate">
@@ -184,5 +238,50 @@
       </div>
     {{/if}}
   </div>
+
+  {{!-- Bulletin Board Tab (left side) --}}
+  {{#if showBulletinTab}}
+    <div class="bulletin-tab" title="{{loc.bulletinTabTooltip}}">
+      <i class="fa-solid fa-scroll"></i>
+    </div>
+
+    {{!-- Bulletin Board Drawer --}}
+    <div class="bulletin-drawer">
+      <h3 class="section-heading">
+        <i class="fa-solid fa-scroll"></i> {{loc.bulletinHeading}}
+      </h3>
+
+      <div class="bulletin-entry">
+        <h4 class="bulletin-entry-title">
+          <i class="fa-solid fa-thumbtack"></i> {{loc.motdTitle}}
+        </h4>
+
+        {{#if hasMotd}}
+          <div class="bulletin-motd-content">{{{motd}}}</div>
+        {{else}}
+          {{#unless isGM}}
+            <p class="bulletin-empty"><em>{{loc.motdEmpty}}</em></p>
+          {{/unless}}
+        {{/if}}
+
+        {{#if isGM}}
+          <div class="bulletin-gm-controls">
+            <textarea class="motd-input" rows="4" placeholder="{{loc.motdPlaceholder}}">{{motdDraft}}</textarea>
+            <p class="bulletin-hint">{{loc.motdHint}}</p>
+            <div class="bulletin-btn-row">
+              <button type="button" data-action="motdSet" class="tavern-btn bulletin-btn bulletin-btn-set">
+                <i class="fa-solid fa-thumbtack"></i> {{loc.motdSet}}
+              </button>
+              {{#if hasMotd}}
+                <button type="button" data-action="motdRemove" class="tavern-btn bulletin-btn bulletin-btn-remove">
+                  <i class="fa-solid fa-trash"></i> {{loc.motdRemove}}
+                </button>
+              {{/if}}
+            </div>
+          </div>
+        {{/if}}
+      </div>
+    </div>
+  {{/if}}
 
 </div>
