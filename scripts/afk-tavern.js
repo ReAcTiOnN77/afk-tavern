@@ -96,12 +96,16 @@ try {
 } catch {}
 
 async function loadTavernQuotes() {
-  try {
-    const response = await fetch(`modules/${MODULE_ID}/assets/tavern-quotes.json`);
-    if (response.ok) _tavernQuotes = await response.json();
-  } catch (e) {
-    console.warn("AFK Tavern | Failed to load tavern quotes", e);
-  }
+  const { loadCustomizableJson } = await import("./generic-helpers.js");
+  const data = await loadCustomizableJson(MODULE_ID, "tavern-quotes.json", "customTavernQuotesPath");
+  if (Array.isArray(data)) _tavernQuotes = data;
+}
+
+// Called by the customTavernQuotesPath setting onChange to re-read after
+// the GM points at a different file (or clears the override back to shipped).
+async function _reloadTavernQuotes() {
+  _tavernQuotes = [];
+  await loadTavernQuotes();
 }
 
 function getRandomQuote() {
@@ -312,8 +316,11 @@ Hooks.once("ready", async () => {
       getBreakState,
       isBreakActive,
       openBreakRoom,
+      openTavernAsPlayer,
       startBreak,
-      endBreak
+      endBreak,
+      startPlayerTavern,
+      endPlayerTavern
     };
   }
 
@@ -330,14 +337,36 @@ Hooks.once("ready", async () => {
 Hooks.on("getSceneControlButtons", (controls) => {
   const tokens = controls.tokens;
   if (!tokens) return;
+
+  const isGM = game.user.isGM;
+  let allowPlayers = true;
+  try { allowPlayers = !!game.settings.get(MODULE_ID, "allowPlayerTavern"); } catch {}
+  if (!isGM && !allowPlayers) return;
+
+  const title = isGM
+    ? "AFK_TAVERN.controls.startBreak"
+    : "AFK_TAVERN.controls.openTavern";
+
   tokens.tools["afk-tavern-break"] = {
     name: "afk-tavern-break",
-    title: "AFK_TAVERN.controls.startBreak",
+    title,
     icon: "fa-solid fa-beer-mug-empty",
     button: true,
-    visible: game.user.isGM,
+    visible: true,
     order: Object.keys(tokens.tools).length,
-    onChange: () => openBreakRoom()
+    onChange: () => {
+      // GM: always open the room directly.
+      // Player: if a real break is active, just open. If nothing is active
+      // or a player-tavern is active, route through openTavernAsPlayer so
+      // we start/join the shared tavern state and mark them In Tavern.
+      if (isGM) {
+        openBreakRoom();
+      } else if (breakState.active && !breakState.playerMode) {
+        openBreakRoom();
+      } else {
+        openTavernAsPlayer();
+      }
+    }
   };
 });
 
@@ -444,7 +473,10 @@ function openBreakRoom(opts = {}) {
   let startMinimized = false;
   try { startMinimized = !opts.skipMinimized && !!game.settings.get(MODULE_ID, "startMinimized"); } catch {}
 
-  if (startMinimized && breakState.active) {
+  // Only minimize on a real break — the player-tavern doesn't have a timer
+  // to watch from the minibar.
+  const isRealBreak = breakState.active && !breakState.playerMode;
+  if (startMinimized && isRealBreak) {
     _MiniBar?.showMiniBar();
     return;
   }
@@ -461,9 +493,130 @@ function openBreakRoom(opts = {}) {
   breakRoomApp.render(true);
 }
 
+// Player-initiated tavern: opens a shared "player tavern" state where all
+// connected users see each other's statuses (In Tavern / In Scene) and can
+// spectate one another, but with no timer and no GM controls. If a real
+// break IS already active, defers to the normal openBreakRoom flow.
+
+// Post a chat message when a player enters the tavern. Called on the
+// initiator's client only — the message is created once and Foundry
+// broadcasts it to everyone via ChatMessage.create.
+function _announcePlayerTavernEntry(kind) {
+  try {
+    const key = kind === "opened"
+      ? "AFK_TAVERN.notifications.playerTavernOpened"
+      : "AFK_TAVERN.notifications.playerTavernJoined";
+    const msg = i18nFormat(key, { name: escapeHtml(game.user.name) });
+    ChatMessage.create({
+      content: `<div class="afk-tavern-player-tavern-notice"><i class="fa-solid fa-beer-mug-empty"></i> ${msg}</div>`,
+      whisper: [],
+      speaker: { alias: i18n("AFK_TAVERN.title") }
+    });
+  } catch (e) {
+    console.warn("AFK Tavern | Failed to post player tavern chat notice", e);
+  }
+}
+
+function openTavernAsPlayer() {
+  if (!_BreakRoomApp) return;
+
+  let allowed = true;
+  try { allowed = !!game.settings.get(MODULE_ID, "allowPlayerTavern"); } catch {}
+  if (!allowed) {
+    ui.notifications.warn(i18n("AFK_TAVERN.notifications.playerTavernDisabled"));
+    return;
+  }
+
+  // A real break outranks a player tavern — just open the normal room.
+  if (breakState.active && !breakState.playerMode) {
+    openBreakRoom({ skipMinimized: true });
+    return;
+  }
+
+  // Already in player-tavern mode. If we're actually joining (going from
+  // away → back), announce that. If we're already "back" (e.g. clicked the
+  // scene control a second time), just bring the window forward without
+  // spamming chat.
+  if (breakState.active && breakState.playerMode) {
+    const wasAway = breakState.players[game.user.id] !== "back";
+    if (wasAway) {
+      markPlayerBack(game.user.id);
+      _announcePlayerTavernEntry("joined");
+    }
+    openBreakRoom({ skipMinimized: true });
+    return;
+  }
+
+  // First person to open the tavern outside of a break.
+  _announcePlayerTavernEntry("opened");
+  startPlayerTavern();
+  openBreakRoom({ skipMinimized: true });
+}
+
+// Initialise a shared player-tavern state. Anyone can call this; the
+// initiator's status is "back" (In Tavern) and everyone else defaults to
+// "away" (In Scene) until they open the tavern themselves.
+function startPlayerTavern() {
+  if (breakState.active) return;
+  const players = {};
+  for (const user of game.users) {
+    if (user.active && !isPlayerHidden(user.id)) {
+      players[user.id] = (user.id === game.user.id) ? "back" : "away";
+    }
+  }
+  breakState = {
+    active: true,
+    playerMode: true,
+    lobbyMode: false,
+    duration: 0,
+    remaining: 0,
+    startedAt: Date.now(),
+    players,
+    playingGame: {}
+  };
+  game.socket.emit(SOCKET_KEY, { action: "playerTavernStarted", state: breakState });
+  _refreshBreakRoom({ full: true });
+}
+
+// Tear down a player-tavern state. Called locally (by the last player to
+// leave) and mirrored to everyone via socket. Does NOT run for a real break —
+// that path uses endBreak() and its full teardown (playlist stop, unpause,
+// break-end sound, etc).
+function endPlayerTavern() {
+  if (!breakState.active || !breakState.playerMode) return;
+  breakState.active = false;
+  breakState.playerMode = false;
+  breakState.remaining = 0;
+  breakState.playingGame = {};
+  _syncResolved = false;
+  game.socket.emit(SOCKET_KEY, { action: "playerTavernEnded" });
+  // Local teardown mirrors what the playerTavernEnded socket handler does
+  // on other clients: close any open minigame/config apps, but leave the
+  // break-room window alone (the leaving player's close() is finishing on
+  // its own, and any other open break-room is a GM setup screen that
+  // should stay open).
+  cancelPendingInvite();
+  for (const app of foundry.applications.instances.values()) {
+    if (app === breakRoomApp) continue;
+    const cls = app.options?.classes;
+    if (cls?.includes("afk-tavern") || cls?.includes("afk-tavern-config-dialog")) {
+      if (app.rendered) try { app.close(); } catch {}
+    }
+  }
+  _inviteDialogOpen = false;
+  if (breakRoomApp && breakRoomApp.rendered) {
+    breakRoomApp._afkResetToSetupView?.();
+    breakRoomApp.render(false);
+  }
+  _MiniBar?.hideMiniBar();
+  _updatePlayerListButton();
+}
+
 function startBreak(durationSeconds, lobbyMode = false) {
   if (!game.user.isGM) return;
-  if (breakState.active) return;
+  // If a real break is already active, do nothing. If a player-tavern is
+  // active, we upgrade it into a real break (below).
+  if (breakState.active && !breakState.playerMode) return;
   _breakEndSoundPlayed = false;
   _syncResolved = false;
   _allReadyNotified = false;
@@ -476,6 +629,7 @@ function startBreak(durationSeconds, lobbyMode = false) {
   }
   breakState = {
     active: true,
+    playerMode: false,
     lobbyMode,
     duration: durationSeconds,
     remaining: durationSeconds,
@@ -544,6 +698,14 @@ function markPlayerAway(userId) {
   _allReadyNotified = false;
   game.socket.emit(SOCKET_KEY, { action: "playerAway", userId });
   _refreshBreakRoom();
+  // Auto-close a player-tavern when the last person in it steps out.
+  // Any client can trigger this — duplicate playerTavernEnded messages are
+  // harmless since the handler is idempotent.
+  if (breakState.playerMode) {
+    const anyoneStillIn = Object.entries(breakState.players)
+      .some(([uid, s]) => s === "back" && game.users.get(uid)?.active);
+    if (!anyoneStillIn) endPlayerTavern();
+  }
 }
 
 function setPlayerGame(userId, gameLabel) {
@@ -680,7 +842,7 @@ function _refreshBreakRoom(opts = {}) {
     const allReady = isLobby && everyoneBack && !hasOffline;
 
     let badge = heading.querySelector(".all-back-badge");
-    const badgeText = getBadgeText(isLobby, allReady, everyoneBack, allPlayersBack, loc);
+    const badgeText = getBadgeText(isLobby, allReady, everyoneBack, allPlayersBack, loc, !!state.playerMode);
     if (badgeText) {
       if (!badge) { badge = document.createElement("span"); badge.className = "all-back-badge"; heading.appendChild(badge); }
       badge.textContent = badgeText;
@@ -699,7 +861,7 @@ function _refreshBreakRoom(opts = {}) {
 
     const isOnline = game.users.get(userId)?.active ?? false;
     const playingGame = state.playingGame?.[userId] ?? null;
-    const pd = getPlayerDisplay(status, playingGame, isOnline, isLobby, loc);
+    const pd = getPlayerDisplay(status, playingGame, isOnline, isLobby, loc, !!state.playerMode);
 
     card.classList.toggle("player-back", pd.isBack);
     card.classList.toggle("player-away", !pd.isBack);
@@ -707,8 +869,8 @@ function _refreshBreakRoom(opts = {}) {
     const badge = card.querySelector(".player-status-badge");
     if (badge) badge.innerHTML = `<i class="${pd.statusIcon}"></i> ${pd.statusText}`;
 
-    if (userId === game.user.id) {
-      const btn = card.querySelector(".tavern-btn");
+    if (userId === game.user.id && !state.playerMode) {
+      const btn = card.querySelector(".tavern-btn:not(.btn-spectate)");
       if (btn) {
         btn.className = pd.btnCls;
         btn.dataset.action = pd.btnAction;
@@ -814,11 +976,17 @@ function _onSocketMessage(data) {
       _breakEndSoundPlayed = false;
       _startTimer();
       if (!game.user.isGM) playSound("break-start.ogg");
+      // If a player already had the room open (e.g. from a player-tavern),
+      // force it to re-render into break mode instead of just bringToFront.
+      if (breakRoomApp && breakRoomApp.rendered) {
+        breakRoomApp.render(false);
+      }
       openBreakRoom();
       break;
 
     case "breakEnded":
       breakState.active = false;
+      breakState.playerMode = false;
       breakState.remaining = 0;
       breakState.playingGame = {};
       _syncResolved = false;
@@ -831,10 +999,50 @@ function _onSocketMessage(data) {
       ui.notifications.info(i18n(data.wasLobby ? "AFK_TAVERN.notifications.sessionStarted" : "AFK_TAVERN.notifications.breakEnded"));
       break;
 
+    case "playerTavernStarted":
+      breakState = data.state;
+      _syncResolved = true;
+      if (breakRoomApp && breakRoomApp.rendered) {
+        // GM who had the room already open should land on the setup screen,
+        // not get yanked into the crowded tavern view.
+        if (game.user.isGM) breakRoomApp._afkForceGmSetupView?.();
+        breakRoomApp.render(false);
+      }
+      _updatePlayerListButton();
+      break;
+
+    case "playerTavernEnded":
+      breakState.active = false;
+      breakState.playerMode = false;
+      breakState.playingGame = {};
+      _syncResolved = false;
+      // Don't kill the break-room window — the GM may have their setup
+      // screen open, and everyone else's app should just re-render (the
+      // View Tavern button flips back to grey). But do close any open
+      // minigame or spectate apps, since the tavern context is gone.
+      cancelPendingInvite();
+      for (const app of foundry.applications.instances.values()) {
+        if (app === breakRoomApp) continue;
+        const cls = app.options?.classes;
+        if (cls?.includes("afk-tavern") || cls?.includes("afk-tavern-config-dialog")) {
+          if (app.rendered) try { app.close(); } catch {}
+        }
+      }
+      _inviteDialogOpen = false;
+      if (breakRoomApp && breakRoomApp.rendered) {
+        // Reset the GM's "in tavern" mode back to setup view so they don't
+        // stay stuck in the crowded tavern view of a tavern that just ended.
+        breakRoomApp._afkResetToSetupView?.();
+        breakRoomApp.render(false);
+      }
+      _MiniBar?.hideMiniBar();
+      _updatePlayerListButton();
+      break;
+
     case "playerBack":
       breakState.players[data.userId] = "back";
       _refreshBreakRoom();
-      if (game.user.isGM) {
+      if (game.user.isGM && !breakState.playerMode) {
         _checkAllBack();
       }
       break;
@@ -843,6 +1051,13 @@ function _onSocketMessage(data) {
       breakState.players[data.userId] = "away";
       _allReadyNotified = false;
       _refreshBreakRoom();
+      // Auto-close a player-tavern once nobody is "back" anymore. Any client
+      // may run this; duplicate playerTavernEnded messages are harmless.
+      if (breakState.playerMode) {
+        const anyoneStillIn = Object.entries(breakState.players)
+          .some(([uid, s]) => s === "back" && game.users.get(uid)?.active);
+        if (!anyoneStillIn) endPlayerTavern();
+      }
       break;
 
     case "playerGame":
@@ -892,8 +1107,24 @@ function _onSocketMessage(data) {
             delete breakState.playingGame[game.user.id];
             game.socket.emit(SOCKET_KEY, { action: "playerGame", userId: game.user.id, gameLabel: null });
           }
-          _startTimer();
-          openBreakRoom();
+          // Real breaks auto-open (the GM started one, everyone should
+          // see it). Player-taverns are opt-in — a refreshed player
+          // shouldn't be forced into a tavern someone else opened; they
+          // click the scene control themselves to join. State is still
+          // synced so the button lights up correctly.
+          if (!breakState.playerMode) {
+            _startTimer();
+            openBreakRoom();
+          } else {
+            // If the synced state has us marked "back" from before the
+            // refresh, correct that — we haven't opted in yet on this
+            // fresh session. Broadcasts so the auto-close-if-last check
+            // fires when we were the only patron.
+            if (breakState.players[game.user.id] === "back") {
+              markPlayerAway(game.user.id);
+            }
+            _updatePlayerListButton();
+          }
         }
       }
       break;
@@ -936,8 +1167,11 @@ export {
   getBreakState,
   isBreakActive,
   openBreakRoom,
+  openTavernAsPlayer,
   startBreak,
   endBreak,
+  startPlayerTavern,
+  endPlayerTavern,
   markPlayerBack,
   markPlayerAway,
   setPlayerGame,
@@ -949,7 +1183,9 @@ export {
   isInviteDialogOpen,
   setInviteDialogOpen,
   playSound,
-  isPlayerHidden
+  isPlayerHidden,
+  _announcePlayerTavernEntry,
+  _reloadTavernQuotes
 };
 
 export function buildPlayerOptions(state) {

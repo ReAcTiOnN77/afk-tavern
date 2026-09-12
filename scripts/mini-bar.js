@@ -14,6 +14,8 @@ function _getMiniBarLoc() {
       statusOffline: i18n("AFK_TAVERN.players.statusOffline"),
       statusBack: i18n("AFK_TAVERN.players.statusBack"),
       statusAway: i18n("AFK_TAVERN.players.statusAway"),
+      statusInTavern: i18n("AFK_TAVERN.players.statusInTavern"),
+      statusInScene: i18n("AFK_TAVERN.players.statusInScene"),
       statusReady: i18n("AFK_TAVERN.lobby.statusReady"),
       statusNotReady: i18n("AFK_TAVERN.lobby.statusNotReady"),
       watching: i18n("AFK_TAVERN.spectate.spectating"),
@@ -104,6 +106,8 @@ export function showMiniBar() {
 
   const state = getBreakState();
   if (!state.active) return;
+  // Player-tavern has no timer to watch and no reason to minimize — skip.
+  if (state.playerMode) return;
 
   const status = state.players?.[game.user.id] ?? "away";
   const isLobby = !!state.lobbyMode;

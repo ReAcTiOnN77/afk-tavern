@@ -171,6 +171,67 @@ export class AudioSettings extends AFKSettingsBase {
   }
 }
 
+export class FilePathsSettings extends AFKSettingsBase {
+  static SETTING_KEYS = ["customTavernQuotesPath", "customWordScrambleWordsPath"];
+
+  // Shape of each row: which shipped default it overrides, for the
+  // placeholder text so GMs know what path is being replaced.
+  static SHIPPED_DEFAULTS = {
+    customTavernQuotesPath: `modules/${MODULE_ID}/assets/tavern-quotes.json`,
+    customWordScrambleWordsPath: `modules/${MODULE_ID}/assets/word-scramble-words.json`
+  };
+
+  static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
+    id: "afk-tavern-settings-file-paths",
+    window: {
+      title: "AFK_TAVERN.settingsApp.filePaths.title",
+      icon: "fa-solid fa-folder-tree",
+      contentClasses: ["standard-form"]
+    },
+    actions: {
+      browseFile: FilePathsSettings.#onBrowseFile,
+      clearPath:  FilePathsSettings.#onClearPath
+    }
+  }, { inplace: false });
+
+  async _preparePartContext(partId, context, options) {
+    context = await super._preparePartContext(partId, context, options);
+    if (partId === "config") {
+      context.description = i18n("AFK_TAVERN.settingsApp.filePaths.description");
+      context.settings = this.constructor.SETTING_KEYS.map(key => ({
+        key,
+        name: i18n(`AFK_TAVERN.settingsApp.${key}.name`),
+        hint: i18n(`AFK_TAVERN.settingsApp.${key}.hint`),
+        value: game.settings.get(MODULE_ID, key),
+        placeholder: this.constructor.SHIPPED_DEFAULTS[key] ?? "",
+        isFile: true,
+        clearable: true
+      }));
+    }
+    return context;
+  }
+
+  static #onBrowseFile(event, target) {
+    const key = target.dataset.key;
+    const input = this.element?.querySelector(`input[name="${key}"]`);
+    if (!input) return;
+    const FP = foundry.applications.apps.FilePicker.implementation;
+    // "any" lets the user browse to JSON files anywhere in Data — the
+    // FilePicker doesn't have a native "json" type.
+    new FP({
+      type: "any",
+      current: input.value || "",
+      callback: (path) => { input.value = path; }
+    }).render(true);
+  }
+
+  static #onClearPath(event, target) {
+    const key = target.dataset.key;
+    const input = this.element?.querySelector(`input[name="${key}"]`);
+    if (input) input.value = "";
+  }
+}
+
 export class GameSettings extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS ?? {}, {

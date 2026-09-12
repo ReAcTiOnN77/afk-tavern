@@ -1,4 +1,4 @@
-import { MODULE_ID, SOCKET_KEY, MinigameRegistry, getBreakState, startBreak, endBreak, markPlayerBack, markPlayerAway, setPlayerGame, clearPlayerGame, moveBreakRoomAside, moveBreakRoomCenter, openBreakRoom, getRandomQuote, i18n, i18nFormat, _setBreakRoomLocAccessor, cancelPendingInvite, playSound, isPlayerHidden } from "./afk-tavern.js";
+import { MODULE_ID, SOCKET_KEY, MinigameRegistry, getBreakState, startBreak, endBreak, markPlayerBack, markPlayerAway, setPlayerGame, clearPlayerGame, moveBreakRoomAside, moveBreakRoomCenter, openBreakRoom, getRandomQuote, i18n, i18nFormat, _setBreakRoomLocAccessor, cancelPendingInvite, playSound, isPlayerHidden, _announcePlayerTavernEntry } from "./afk-tavern.js";
 import { getPlayerDisplay, getBadgeText } from "./generic-helpers.js";
 
 import { isSpectateEnabled, requestSpectate, setSpectateAcceptedHandler, setSpectateApp, SpectateViewApp } from "./spectate-engine.js";
@@ -6,11 +6,22 @@ import { showMiniBar, hideMiniBar } from "./mini-bar.js";
 
 import { formatTime, allNonGMPlayersBack, ApplicationV2, HandlebarsApplicationMixin } from "./generic-helpers.js";
 
+// Small string fingerprint — good enough to notice a MotD changed. Stored
+// per client so the bulletin auto-opens again when the GM edits the pin.
+function _motdHash(str) {
+  const s = (str ?? "").trim();
+  if (!s) return "";
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return String(h);
+}
+
 let _cachedLoc = null;
 function _getStaticLoc(bannerSub) {
   if (!_cachedLoc) {
     _cachedLoc = {
       bannerTitle: i18n("AFK_TAVERN.banner.title"),
+      playerModeSubtitle: i18n("AFK_TAVERN.banner.playerModeSubtitle"),
       durationLabel: i18n("AFK_TAVERN.timer.durationLabel"),
       endTimeLabel: i18n("AFK_TAVERN.timer.endTimeLabel"),
       waiting: i18n("AFK_TAVERN.timer.waiting"),
@@ -18,6 +29,8 @@ function _getStaticLoc(bannerSub) {
       resumeSession: i18n("AFK_TAVERN.buttons.resumeSession"),
       imBack: i18n("AFK_TAVERN.buttons.imBack"),
       stepAway: i18n("AFK_TAVERN.buttons.stepAway"),
+      viewTavern: i18n("AFK_TAVERN.buttons.viewTavern"),
+      viewTavernDisabledTip: i18n("AFK_TAVERN.buttons.viewTavernDisabledTip"),
       patronsHeading: i18n("AFK_TAVERN.players.heading"),
       allPlayersBack: i18n("AFK_TAVERN.players.allPlayersBack"),
       allBack: i18n("AFK_TAVERN.players.allBack"),
@@ -44,8 +57,19 @@ function _getStaticLoc(bannerSub) {
       statusNotReady: i18n("AFK_TAVERN.lobby.statusNotReady"),
       statusBack: i18n("AFK_TAVERN.players.statusBack"),
       statusAway: i18n("AFK_TAVERN.players.statusAway"),
+      statusInTavern: i18n("AFK_TAVERN.players.statusInTavern"),
+      statusInScene: i18n("AFK_TAVERN.players.statusInScene"),
       watching: i18n("AFK_TAVERN.spectate.watching"),
-      statusPlaying: i18n("AFK_TAVERN.players.statusPlaying")
+      statusPlaying: i18n("AFK_TAVERN.players.statusPlaying"),
+      bulletinTabTooltip: i18n("AFK_TAVERN.bulletin.tabTooltip"),
+      bulletinHeading: i18n("AFK_TAVERN.bulletin.heading"),
+      motdTitle: i18n("AFK_TAVERN.bulletin.motdTitle"),
+      motdEmpty: i18n("AFK_TAVERN.bulletin.motdEmpty"),
+      motdLabel: i18n("AFK_TAVERN.bulletin.motdLabel"),
+      motdPlaceholder: i18n("AFK_TAVERN.bulletin.motdPlaceholder"),
+      motdHint: i18n("AFK_TAVERN.bulletin.motdHint"),
+      motdSet: i18n("AFK_TAVERN.bulletin.motdSet"),
+      motdRemove: i18n("AFK_TAVERN.bulletin.motdRemove")
     };
   }
   return { ..._cachedLoc, bannerSub };
@@ -60,6 +84,43 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #drawerEl = null;
   #tavernQuote = null;
   #currentGameApp = null;
+  #bulletinTabEl = null;
+  #bulletinDrawerEl = null;
+  #bulletinOpen = false;
+  #motdDraft = null;
+  // When true AND GM AND player-tavern is active, the GM sees the plain
+  // break setup screen (with a "View Tavern" button) instead of the full
+  // crowded tavern view. Flips to false when the GM clicks View Tavern.
+  #gmSetupView = false;
+
+  constructor(options = {}) {
+    super(options);
+
+    // Auto-open the bulletin drawer for a Message of the Day the user
+    // hasn't seen yet. Once they close it, we record its hash so the drawer
+    // stays closed on subsequent opens — until the GM edits the message.
+    try {
+      const motd = (game.settings.get(MODULE_ID, "messageOfTheDay") ?? "").trim();
+      if (motd.length > 0) {
+        const currentHash = _motdHash(motd);
+        let seenHash = "";
+        try { seenHash = game.settings.get(MODULE_ID, "motdSeenHash") ?? ""; } catch {}
+        if (currentHash !== seenHash) this.#bulletinOpen = true;
+      }
+    } catch {}
+
+    // GM default when opening into a live player-tavern: land on the setup
+    // screen, don't force them into the full tavern view. A "View Tavern"
+    // button lets them opt in.
+    const state = getBreakState();
+    if (game.user.isGM && state.active && state.playerMode) {
+      this.#gmSetupView = true;
+    }
+
+    // Player-tavern mode: auto-open the games drawer since that's the whole
+    // point of the mode. GM in setup-view mode doesn't need it open.
+    if (state.playerMode && !this.#gmSetupView) this.#drawerOpen = true;
+  }
 
   static DEFAULT_OPTIONS = {
     id: "afk-tavern-break-room",
@@ -85,7 +146,10 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
       spectatePlayer: BreakRoomApp.#onSpectatePlayer,
       openHighscores: BreakRoomApp.#onOpenHighscores,
       notifyPlayers: BreakRoomApp.#onNotifyPlayers,
-      toggleLobby: BreakRoomApp.#onToggleLobby
+      toggleLobby: BreakRoomApp.#onToggleLobby,
+      motdSet: BreakRoomApp.#onMotdSet,
+      motdRemove: BreakRoomApp.#onMotdRemove,
+      viewTavern: BreakRoomApp.#onViewTavern
     }
   };
 
@@ -98,17 +162,37 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext(options) {
     const state = getBreakState();
     const isGM = game.user.isGM;
-    const { mm: timerMM, ss: timerSS } = formatTime(state.active ? state.remaining : this.#selectedDuration);
-    const progressPercent = state.active && state.duration > 0
+    const playerMode = !!state.playerMode;
+    // GM can choose to view the "schedule a break" setup screen even when a
+    // player-tavern is live — that's what gmSetupView tracks. From the
+    // template's perspective this is equivalent to being outside player-mode.
+    const gmSetupView = isGM && playerMode && this.#gmSetupView;
+    const showTavernAsPlayerTavern = playerMode && !gmSetupView;
+    const isRealBreak = state.active && !playerMode;
+    const { mm: timerMM, ss: timerSS } = formatTime(isRealBreak ? state.remaining : this.#selectedDuration);
+    const progressPercent = isRealBreak && state.duration > 0
       ? Math.max(0, (state.remaining / state.duration) * 100)
       : 100;
 
     const showOffline = game.settings.get(MODULE_ID, "showOfflinePlayers");
     const isLobby = !!state.lobbyMode;
-    const loc = _getStaticLoc(this.#tavernQuote ?? (this.#tavernQuote = getRandomQuote()));
+    const bannerQuote = this.#tavernQuote ?? (this.#tavernQuote = getRandomQuote());
+    const loc = _getStaticLoc(bannerQuote);
     const players = [];
 
-    if (state.active) {
+    // Message of the Day (bulletin board)
+    let motd = "";
+    try { motd = game.settings.get(MODULE_ID, "messageOfTheDay") ?? ""; } catch {}
+    const motdDraft = this.#motdDraft ?? motd;
+    const hasMotd = motd.trim().length > 0;
+    const showBulletinTab = hasMotd || isGM;
+
+    // Populate the patrons list for any active tavern state (real break OR
+    // player-tavern). Player-tavern uses different status labels ("In the
+    // Tavern" / "At the Table") and hides the own-card toggle button. When
+    // the GM is in setup-view, we skip populating this — they wanted the
+    // schedule-a-break screen, not the full patrons list.
+    if (state.active && !gmSetupView) {
       for (const [userId, status] of Object.entries(state.players)) {
         const user = game.users.get(userId);
         if (!user) continue;
@@ -120,7 +204,7 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
         const isSpectating = playingGame?.startsWith("👁");
         const characterName = actor?.name ?? null;
         const canSpectate = isOnline && isSpectateEnabled() && !!playingGame && !isSpectating && userId !== game.user.id;
-        const pd = getPlayerDisplay(status, playingGame, isOnline, isLobby, loc);
+        const pd = getPlayerDisplay(status, playingGame, isOnline, isLobby, loc, playerMode);
         players.push({
           userId, name: user.name, color: user.color,
           avatar: actor?.img ?? user.avatar ?? "icons/svg/mystery-man.svg",
@@ -128,7 +212,8 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
           isSelf: userId === game.user.id, isGM: user.isGM,
           playingGame, canSpectate, characterName,
           statusText: pd.statusText, statusIcon: pd.statusIcon,
-          btnLabel: pd.btnLabel, btnIcon: pd.btnIcon, btnCls: pd.btnCls, btnAction: pd.btnAction
+          btnLabel: pd.btnLabel, btnIcon: pd.btnIcon, btnCls: pd.btnCls, btnAction: pd.btnAction,
+          hideOwnBtn: pd.hideOwnBtn
         });
       }
 
@@ -137,14 +222,15 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
           if (user.active || state.players[user.id]) continue;
           if (isPlayerHidden(user.id)) continue;
           const actor = user.character;
-          const pd = getPlayerDisplay("away", null, false, isLobby, loc);
+          const pd = getPlayerDisplay("away", null, false, isLobby, loc, playerMode);
           players.push({
             userId: user.id, name: user.name, color: user.color,
             avatar: actor?.img ?? user.avatar ?? "icons/svg/mystery-man.svg",
             isBack: false, isOffline: true, isSelf: false, isGM: user.isGM,
             playingGame: null, canSpectate: false, characterName: actor?.name ?? null,
             statusText: pd.statusText, statusIcon: pd.statusIcon,
-            btnLabel: "", btnIcon: "", btnCls: "", btnAction: ""
+            btnLabel: "", btnIcon: "", btnCls: "", btnAction: "",
+            hideOwnBtn: true
           });
         }
       }
@@ -171,6 +257,24 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     return {
       isGM,
+      // For template branching: only report playerMode=true when we actually
+      // want to show the full tavern view. GM in setup view sees the plain
+      // schedule-a-break UI as if no tavern were open (but with a View
+      // Tavern button they can click to join).
+      playerMode: showTavernAsPlayerTavern,
+      gmSetupView,
+      // View Tavern button is present when the GM is on a screen where
+      // "joining" makes sense: the plain setup screen, or the same screen
+      // with a player-tavern live but GM still in setup view. It's hidden
+      // once the GM has actually joined (they're already there) and hidden
+      // during a real break. Requires the player-tavern feature to be on.
+      showViewTavernBtn: isGM && !isRealBreak && !(playerMode && !gmSetupView) && (() => {
+        try { return !!game.settings.get(MODULE_ID, "allowPlayerTavern"); }
+        catch { return false; }
+      })(),
+      viewTavernBtnActive: isGM && playerMode && gmSetupView,
+      showPatrons: state.active && !gmSetupView,
+      isRealBreak,
       breakActive: state.active,
       timerMM,
       timerSS,
@@ -184,9 +288,10 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
       hasMultiplayer: multiplayerGames.length > 0,
       spectateEnabled: isSpectateEnabled(),
       timerLabel: isLobby ? loc.sessionStartsIn : loc.breakEndsIn,
+      playerTavernLabel: i18n("AFK_TAVERN.timer.playerTavernOpen"),
       gmBtnLabel: isLobby ? loc.startSession : loc.resumeSession,
       gmBtnCls: allReady ? "tavern-btn btn-end btn-all-ready" : "tavern-btn btn-end",
-      badgeText: getBadgeText(isLobby, allReady, everyoneBack, allPlayersBack, loc),
+      badgeText: getBadgeText(isLobby, allReady, everyoneBack, allPlayersBack, loc, playerMode),
       selectedDuration: this.#selectedDuration,
       selectedDurationMinutes: Math.floor(this.#selectedDuration / 60),
       endTimeValue: BreakRoomApp.#computeEndTime(this.#selectedDuration),
@@ -198,8 +303,12 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
       preset20Active: this.#selectedDuration === 1200,
       preset25Active: this.#selectedDuration === 1500,
       preset30Active: this.#selectedDuration === 1800,
-      timerUrgent: state.active && state.remaining <= 60,
-      timerWarning: state.active && state.remaining <= 180 && state.remaining > 60,
+      timerUrgent: isRealBreak && state.remaining <= 60,
+      timerWarning: isRealBreak && state.remaining <= 180 && state.remaining > 60,
+      motd,
+      motdDraft,
+      hasMotd,
+      showBulletinTab,
       loc
     };
   }
@@ -242,15 +351,22 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     if (this.#tabEl) this.#tabEl.remove();
     if (this.#drawerEl) this.#drawerEl.remove();
+    if (this.#bulletinTabEl) this.#bulletinTabEl.remove();
+    if (this.#bulletinDrawerEl) this.#bulletinDrawerEl.remove();
 
-    const breakActive = getBreakState().active;
+    const state = getBreakState();
+    // GM in setup-view shouldn't see the games drawer either — that's the
+    // whole point, a clean break-scheduling screen. They opt into the full
+    // view via the View Tavern button.
+    const gmSetupView = game.user.isGM && state.active && state.playerMode && this.#gmSetupView;
+    const gamesVisible = state.active && !gmSetupView;
     const appEl = html.closest(".application") ?? html;
 
     const tab = html.querySelector(".drawer-tab");
     const drawer = html.querySelector(".games-drawer");
     const gamesEnabled = game.settings.get(MODULE_ID, "enableGamesTab");
-    if (!breakActive || !gamesEnabled) { tab?.remove(); drawer?.remove(); }
-    if (tab && breakActive && gamesEnabled) {
+    if (!gamesVisible || !gamesEnabled) { tab?.remove(); drawer?.remove(); }
+    if (tab && gamesVisible && gamesEnabled) {
       appEl.appendChild(tab);
       this.#tabEl = tab;
       if (!game.settings.get(MODULE_ID, "drawerTabSeen")) {
@@ -266,7 +382,7 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
         }
       });
     }
-    if (drawer && breakActive && gamesEnabled) {
+    if (drawer && gamesVisible && gamesEnabled) {
       appEl.appendChild(drawer);
       this.#drawerEl = drawer;
     }
@@ -276,14 +392,67 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.#drawerEl?.classList.add("drawer-open");
     }
 
+    // Bulletin board (left side)
+    const bulletinTab = html.querySelector(".bulletin-tab");
+    const bulletinDrawer = html.querySelector(".bulletin-drawer");
+    if (bulletinTab && bulletinDrawer) {
+      appEl.appendChild(bulletinTab);
+      appEl.appendChild(bulletinDrawer);
+      this.#bulletinTabEl = bulletinTab;
+      this.#bulletinDrawerEl = bulletinDrawer;
+      bulletinTab.addEventListener("click", () => {
+        this.#bulletinOpen = !this.#bulletinOpen;
+        bulletinTab.classList.toggle("drawer-open", this.#bulletinOpen);
+        bulletinDrawer.classList.toggle("drawer-open", this.#bulletinOpen);
+        // Closing the bulletin means "I've seen the current MotD" — record
+        // its hash so it doesn't auto-open again until the GM edits it.
+        if (!this.#bulletinOpen) {
+          try {
+            const motd = (game.settings.get(MODULE_ID, "messageOfTheDay") ?? "").trim();
+            game.settings.set(MODULE_ID, "motdSeenHash", _motdHash(motd));
+          } catch {}
+        }
+      });
+      if (this.#bulletinOpen) {
+        bulletinTab.classList.add("drawer-open");
+        bulletinDrawer.classList.add("drawer-open");
+      }
+
+      // Track MotD input as draft so re-renders don't wipe unsaved text
+      const motdInput = bulletinDrawer.querySelector(".motd-input");
+      if (motdInput && game.user.isGM) {
+        motdInput.addEventListener("input", (e) => {
+          this.#motdDraft = e.target.value;
+        });
+      }
+    }
+
+    // Live-refresh the bulletin when the MotD changes on any client. If
+    // the new content differs from what this user has already seen, we
+    // force the drawer back open so they notice the update.
+    if (!this._motdHookId) {
+      this._motdHookId = Hooks.on("updateSetting", (setting) => {
+        if (setting?.key !== `${MODULE_ID}.messageOfTheDay`) return;
+        try {
+          const motd = (game.settings.get(MODULE_ID, "messageOfTheDay") ?? "").trim();
+          const currentHash = _motdHash(motd);
+          let seenHash = "";
+          try { seenHash = game.settings.get(MODULE_ID, "motdSeenHash") ?? ""; } catch {}
+          if (motd.length > 0 && currentHash !== seenHash) this.#bulletinOpen = true;
+        } catch {}
+        this.render(false);
+      });
+    }
+
     const header = appEl.querySelector(".window-header");
     const musicEnabled = game.settings.get(MODULE_ID, "enableMusicControls");
-    if (musicEnabled && breakActive) {
+    const isRealBreak = state.active && !state.playerMode;
+    if (musicEnabled && isRealBreak) {
       this.#updateMusicBtn(header);
       this.#updateNowPlaying(header);
     }
 
-    if (musicEnabled && breakActive && !this._musicHookId) {
+    if (musicEnabled && isRealBreak && !this._musicHookId) {
       const refresh = () => {
         const appEl = this.element?.closest(".application") ?? this.element;
         const h = appEl?.querySelector(".window-header");
@@ -374,13 +543,18 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #cleanupDrawer() {
     this.#tabEl?.remove();
     this.#drawerEl?.remove();
+    this.#bulletinTabEl?.remove();
+    this.#bulletinDrawerEl?.remove();
     this.#tabEl = null;
     this.#drawerEl = null;
+    this.#bulletinTabEl = null;
+    this.#bulletinDrawerEl = null;
   }
 
   #teardownUI() {
     if (this._musicHookId) { Hooks.off("updatePlaylist", this._musicHookId); this._musicHookId = null; }
     if (this._musicSoundHookId) { Hooks.off("updatePlaylistSound", this._musicSoundHookId); this._musicSoundHookId = null; }
+    if (this._motdHookId) { Hooks.off("updateSetting", this._motdHookId); this._motdHookId = null; }
     const appEl = this.element?.closest(".application") ?? this.element;
     appEl?.querySelector("#afk-now-playing-banner")?.remove();
   }
@@ -753,6 +927,79 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
     icon.className = `fa-solid ${this.#lobbyMode ? "fa-square-check" : "fa-square"}`;
   }
 
+  // Called by the playerTavernStarted socket handler when the GM already
+  // had the room open — flips them into setup view so they don't get yanked
+  // into the crowded tavern UI without asking.
+  _afkForceGmSetupView() {
+    if (!game.user.isGM) return;
+    this.#gmSetupView = true;
+    this.#drawerOpen = false;
+  }
+
+  // Called when a player-tavern ends. If the GM had joined the tavern
+  // ("View Tavern"), reset them to setup view so the window doesn't stay
+  // in the now-orphaned crowded state. No-op for non-GMs since they don't
+  // use gmSetupView.
+  _afkResetToSetupView() {
+    if (!game.user.isGM) return;
+    this.#gmSetupView = true;
+    this.#drawerOpen = false;
+  }
+
+  // GM opts into the full player-tavern view. Marks the GM as In Tavern
+  // (which broadcasts a playerBack so patrons see them arrive), flips out
+  // of setup-view, and re-renders into the full tavern UI.
+  static #onViewTavern() {
+    if (!game.user.isGM) return;
+    const state = getBreakState();
+    if (!state.active || !state.playerMode) return;
+    this.#gmSetupView = false;
+    this.#drawerOpen = true;
+    const wasAway = state.players[game.user.id] !== "back";
+    if (wasAway) {
+      markPlayerBack(game.user.id);
+      _announcePlayerTavernEntry("joined");
+    }
+    this.render(false);
+    // The window grows taller (patrons list appears) and wider visually
+    // (games drawer sits alongside), so recentre once the new content has
+    // laid out — otherwise the setup-height position leaves the window
+    // shoved awkwardly off-centre or off-screen.
+    setTimeout(() => {
+      if (!this.rendered) return;
+      const w = this.position.width ?? 520;
+      const h = this.element?.getBoundingClientRect()?.height ?? 500;
+      this.setPosition({
+        left: Math.max(10, (window.innerWidth - w) / 2),
+        top: Math.max(10, (window.innerHeight - h) / 2)
+      });
+    }, 100);
+  }
+
+  static async #onMotdSet() {
+    if (!game.user.isGM) return;
+    const input = this.element?.querySelector(".motd-input");
+    const value = (input?.value ?? this.#motdDraft ?? "").trim();
+    await game.settings.set(MODULE_ID, "messageOfTheDay", value);
+    // The GM has obviously seen what they just wrote — record it as seen
+    // on this client so the updateSetting hook doesn't force-open on top
+    // of the drawer they were already using.
+    try { await game.settings.set(MODULE_ID, "motdSeenHash", _motdHash(value)); } catch {}
+    this.#motdDraft = null;
+    if (value) ui.notifications.info(i18n("AFK_TAVERN.bulletin.motdSetSuccess"));
+    this.render(false);
+  }
+
+  static async #onMotdRemove() {
+    if (!game.user.isGM) return;
+    await game.settings.set(MODULE_ID, "messageOfTheDay", "");
+    // MotD is gone — clear seen hash so a future pin will be treated as new.
+    try { await game.settings.set(MODULE_ID, "motdSeenHash", ""); } catch {}
+    this.#motdDraft = null;
+    ui.notifications.info(i18n("AFK_TAVERN.bulletin.motdRemoveSuccess"));
+    this.render(false);
+  }
+
   static async #onToggleMusic() {
     const musicPlaylists = game.playlists?.contents.filter(p => p.channel === "music") ?? [];
     const anyPlaying = musicPlaylists.some(p => p.playing);
@@ -790,6 +1037,17 @@ export class BreakRoomApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const state = getBreakState();
+
+    // Player-tavern: closing the window is the "leave" gesture. Mark self
+    // away (which triggers auto-close-if-last), then close cleanly. No GM
+    // confirm dialog, no minimize-to-bar.
+    if (state.active && state.playerMode) {
+      if (state.players[game.user.id] === "back") markPlayerAway(game.user.id);
+      this.#teardownUI();
+      hideMiniBar();
+      this.#cleanupDrawer();
+      return super.close({ _afkConfirmed: true });
+    }
 
     if (game.user.isGM && state.active) {
       const isLobby = !!state.lobbyMode;

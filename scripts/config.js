@@ -1,5 +1,5 @@
 import { MODULE_ID, i18n } from "./afk-tavern.js";
-import { AudioSettings, PlayerSettings, GameSettings } from "./settings.js";
+import { AudioSettings, PlayerSettings, GameSettings, FilePathsSettings } from "./settings.js";
 
 export function registerSettings() {
   game.settings.registerMenu(MODULE_ID, "audioSettings", {
@@ -26,6 +26,15 @@ export function registerSettings() {
     hint: "AFK_TAVERN.settings.gameSettings.hint",
     icon: "fa-solid fa-dice",
     type: GameSettings,
+    restricted: true
+  });
+
+  game.settings.registerMenu(MODULE_ID, "filePathsSettings", {
+    name: "AFK_TAVERN.settings.filePathsSettings.name",
+    label: "AFK_TAVERN.settings.filePathsSettings.label",
+    hint: "AFK_TAVERN.settings.filePathsSettings.hint",
+    icon: "fa-solid fa-folder-tree",
+    type: FilePathsSettings,
     restricted: true
   });
 
@@ -87,6 +96,56 @@ export function registerSettings() {
     config: true,
     default: true,
     type: Boolean
+  });
+
+  game.settings.register(MODULE_ID, "allowPlayerTavern", {
+    name: "AFK_TAVERN.settings.allowPlayerTavern.name",
+    hint: "AFK_TAVERN.settings.allowPlayerTavern.hint",
+    scope: "world",
+    config: true,
+    default: false,
+    type: Boolean,
+    requiresReload: true
+  });
+
+  game.settings.register(MODULE_ID, "customTavernQuotesPath", {
+    scope: "world",
+    config: false,
+    default: "",
+    type: String,
+    onChange: () => {
+      // Re-read the file on next tavern open. loadTavernQuotes assigns
+      // to the module-level _tavernQuotes cache, so just re-run it.
+      import("./afk-tavern.js").then(m => m._reloadTavernQuotes?.());
+    }
+  });
+
+  game.settings.register(MODULE_ID, "customWordScrambleWordsPath", {
+    scope: "world",
+    config: false,
+    default: "",
+    type: String,
+    onChange: () => {
+      // Invalidate the word-scramble cache so the next game re-fetches.
+      import("./minigames/word-scramble.js").then(m => m._invalidateWordListCache?.());
+    }
+  });
+
+  game.settings.register(MODULE_ID, "messageOfTheDay", {
+    scope: "world",
+    config: false,
+    default: "",
+    type: String
+  });
+
+  // Per-client tracking: hash of the last MotD the user has seen (and
+  // chose to close). Compared against the current MotD's hash — if
+  // they differ, the bulletin auto-opens again to surface the update.
+  game.settings.register(MODULE_ID, "motdSeenHash", {
+    scope: "client",
+    config: false,
+    default: "",
+    type: String
   });
 
   game.settings.register(MODULE_ID, "showOfflinePlayers", {
