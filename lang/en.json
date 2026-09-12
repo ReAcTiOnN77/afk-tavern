@@ -20,6 +20,10 @@
         "name": "Allow Spectating",
         "hint": "When enabled, players can watch each other's minigames during breaks."
       },
+      "allowPlayerTavern": {
+        "name": "Allow Players to Open Tavern",
+        "hint": "When enabled, players can open the tavern to play minigames even when no break is active. A chat message notifies everyone when a player does this."
+      },
       "showOfflinePlayers": {
         "name": "Show Offline Players",
         "hint": "Display offline players in the break room with a greyed-out card so you can see who hasn't connected yet."
@@ -50,6 +54,11 @@
         "name": "Games Configuration",
         "label": "Configure Games",
         "hint": "Enable or disable the games tab and individual minigames."
+      },
+      "filePathsSettings": {
+        "name": "Custom Asset Paths",
+        "label": "Configure Paths",
+        "hint": "Override the bundled tavern quotes and word list files with your own."
       }
     },
     "settingsApp": {
@@ -86,21 +95,37 @@
         "name": "Bell Notification",
         "hint": "Played when the GM rings the bell."
       },
+      "filePaths": {
+        "title": "AFK Tavern - Custom Asset Paths",
+        "description": "Point AFK Tavern at your own JSON files for tavern quotes and word-scramble words. Leave a field blank to use the bundled default. Files live outside the module folder so your changes survive updates."
+      },
+      "customTavernQuotesPath": {
+        "name": "Tavern Quotes File",
+        "hint": "Path to a JSON array of quote strings. Shown as the subtitle under the AFK Tavern banner."
+      },
+      "customWordScrambleWordsPath": {
+        "name": "Word Scramble Words File",
+        "hint": "Path to a JSON object with easy/medium/hard arrays of words for the Word Scramble minigame."
+      },
       "browse": "Browse",
-      "preview": "Preview"
+      "preview": "Preview",
+      "clearPath": "Clear (use default)"
     },
     "controls": {
-      "startBreak": "AFK Tavern - Open Tavern"
+      "startBreak": "AFK Tavern - Open Tavern",
+      "openTavern": "AFK Tavern - Play Games"
     },
     "banner": {
       "title": "AFK Tavern",
-      "subtitle": "☕ Take a breather, adventurer"
+      "subtitle": "☕ Take a breather, adventurer",
+      "playerModeSubtitle": "🎲 Just here for the games"
     },
     "timer": {
       "durationLabel": "Duration (minutes)",
       "endTimeLabel": "End Time",
       "waiting": "Waiting for the GM to start break...",
-      "breakEndsIn": "BREAK ENDS IN"
+      "breakEndsIn": "BREAK ENDS IN",
+      "playerTavernOpen": "TAVERN IS OPEN — NO BREAK SCHEDULED"
     },
     "lobby": {
       "label": "Pre-Session Lobby",
@@ -113,12 +138,27 @@
       "statusNotReady": "Not Ready",
       "allReady": "ALL READY!"
     },
+    "bulletin": {
+      "tabTooltip": "Tavern Bulletin Board",
+      "heading": "Bulletin Board",
+      "motdTitle": "Message of the Day",
+      "motdEmpty": "No message pinned.",
+      "motdLabel": "Message of the Day",
+      "motdPlaceholder": "Pin a message to the tavern bulletin board...",
+      "motdHint": "Persists across sessions until removed. Supports basic HTML.",
+      "motdSet": "Pin Message",
+      "motdRemove": "Take Down",
+      "motdSetSuccess": "Message of the day pinned.",
+      "motdRemoveSuccess": "Message of the day taken down."
+    },
     "buttons": {
       "startBreak": "Open Tavern",
       "resumeSession": "Resume Session",
       "notifyPlayers": "Ring Bell - Get Players' Attention",
       "imBack": "I'm Back!",
-      "stepAway": "Step Away"
+      "stepAway": "Step Away",
+      "viewTavern": "View Tavern",
+      "viewTavernDisabledTip": "No players in the tavern right now"
     },
     "players": {
       "heading": "Tavern Patrons",
@@ -126,6 +166,8 @@
       "statusAway": "Away",
       "statusOffline": "Offline",
       "statusPlaying": "Playing {game}",
+      "statusInTavern": "In the Tavern",
+      "statusInScene": "At the Table",
       "gmBadge": "GM",
       "allBack": "All Back!",
       "allPlayersBack": "All Players Back"
@@ -168,7 +210,10 @@
       "allReady": "All players are ready! Good to go.",
       "timerExpired": "Break timer has expired!",
       "bellRing": "The GM wants your attention!",
-      "duplicateTab": "AFK Tavern is already open in another tab. Using multiple tabs may cause unexpected behaviour."
+      "duplicateTab": "AFK Tavern is already open in another tab. Using multiple tabs may cause unexpected behaviour.",
+      "playerTavernOpened": "<strong>{name}</strong> stepped into the tavern to play some games.",
+      "playerTavernJoined": "<strong>{name}</strong> joined the tavern.",
+      "playerTavernDisabled": "The GM has disabled player access to the tavern outside of breaks."
     },
     "dialog": {
       "endEarlyTitle": "End Break Early?",
